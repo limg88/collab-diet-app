@@ -14,6 +14,7 @@ import { IngredientsService } from '../ingredients/ingredients.service';
 import { MealTypeEnum, UnitEnum } from '../ingredients/ingredient.entity';
 import { AddMealItemDto } from './dto/add-meal-item.dto';
 import { UpdateMealItemDto } from './dto/update-meal-item.dto';
+import { CollaborationService } from '../collaboration/collaboration.service';
 
 /**
  * Returns the ISO date string (YYYY-MM-DD) for the Monday of the current week
@@ -56,6 +57,7 @@ export class MenuService {
     private readonly mealItemRepo: Repository<MealItem>,
     private readonly ingredientsService: IngredientsService,
     private readonly dataSource: DataSource,
+    private readonly collaborationService: CollaborationService,
   ) {}
 
   async getCurrentWeekMenu(userId: string): Promise<WeeklyMenu> {
@@ -182,16 +184,28 @@ export class MenuService {
 
   async updateMealItem(userId: string, itemId: string, dto: UpdateMealItemDto): Promise<MealItem> {
     const item = await this.findMealItemOwnedOrFail(userId, itemId);
+    const currentWeekStart = getMondayOfCurrentWeekRome();
+    if (item.meal.day.menu.weekStart !== currentWeekStart) {
+      throw new BadRequestException('Can only modify items in the current week menu');
+    }
     item.quantity = dto.quantity;
     return this.mealItemRepo.save(item);
   }
 
   async removeMealItem(userId: string, itemId: string): Promise<void> {
     const item = await this.findMealItemOwnedOrFail(userId, itemId);
+    const currentWeekStart = getMondayOfCurrentWeekRome();
+    if (item.meal.day.menu.weekStart !== currentWeekStart) {
+      throw new BadRequestException('Can only modify items in the current week menu');
+    }
     await this.mealItemRepo.remove(item);
   }
 
   async getCollaboratorMenu(requestingUserId: string, collaboratorUserId: string): Promise<WeeklyMenu> {
+    const collaborators = await this.collaborationService.getActiveCollaborators(requestingUserId);
+    if (!collaborators.find(c => c.id === collaboratorUserId)) {
+      throw new ForbiddenException('You are not a collaborator of this user');
+    }
     const weekStart = getMondayOfCurrentWeekRome();
     const menu = await this.loadFullMenu(collaboratorUserId, weekStart);
     if (!menu) {

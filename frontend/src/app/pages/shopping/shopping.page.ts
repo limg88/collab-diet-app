@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
   IonList, IonItem, IonLabel, IonIcon, IonFab, IonFabButton,
-  IonCheckbox, IonInput, IonProgressBar, IonBadge, IonSkeletonText, IonNote,
+  IonCheckbox, IonInput, IonProgressBar, IonBadge, IonSkeletonText, IonNote, IonSearchbar,
   AlertController, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { add, trashOutline, refreshOutline, cartOutline, checkmarkCircle, storefrontOutline, peopleOutline } from 'ionicons/icons';
+import { add, trashOutline, refreshOutline, cartOutline, checkmarkCircle, storefrontOutline, peopleOutline, pencilOutline } from 'ionicons/icons';
 import { ShoppingService, ShoppingItem } from '../../features/shopping/shopping.service';
 import { Unit } from '../../features/ingredients/ingredients.service';
 
@@ -19,7 +19,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
     CommonModule, FormsModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
     IonList, IonItem, IonLabel, IonIcon, IonFab, IonFabButton,
-    IonCheckbox, IonInput, IonProgressBar, IonBadge, IonSkeletonText, IonNote
+    IonCheckbox, IonInput, IonProgressBar, IonBadge, IonSkeletonText, IonNote, IonSearchbar
   ],
   styles: [`
     .progress-card {
@@ -135,6 +135,14 @@ import { Unit } from '../../features/ingredients/ingredients.service';
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
+      <ion-toolbar style="--background: #f5f5f5; --border-width: 0;">
+        <ion-searchbar
+          placeholder="Cerca nella lista..."
+          [(ngModel)]="searchQuery"
+          style="--background: white; --border-radius: 10px; --box-shadow: var(--app-shadow);"
+          (ionInput)="searchQuery = $event.detail.value ?? ''">
+        </ion-searchbar>
+      </ion-toolbar>
     </ion-header>
 
     <ion-content>
@@ -183,6 +191,11 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                     </span>
                     <span class="qty-total" *ngIf="item.totalQty !== getQtyToBuy(item) && item.stockQty === 0">
                       tot. {{ item.totalQty }}
+                    </span>
+                    <span
+                      *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased"
+                      style="font-size: 0.72rem; background: rgba(46,125,50,0.1); color: #2E7D32; border-radius: 4px; padding: 1px 6px; font-weight: 600;">
+                      ✓ In dispensa
                     </span>
                   </div>
                   <!-- Collaborator breakdown -->
@@ -240,9 +253,17 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                   <div class="item-sub">
                     <span class="qty-to-buy">{{ getQtyToBuy(item) }} {{ item.unit }}</span>
                     <span class="qty-total" *ngIf="item.stockQty > 0">(scorta: {{ item.stockQty }})</span>
+                    <span
+                      *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased"
+                      style="font-size: 0.72rem; background: rgba(46,125,50,0.1); color: #2E7D32; border-radius: 4px; padding: 1px 6px; font-weight: 600;">
+                      ✓ In dispensa
+                    </span>
                   </div>
                 </ion-label>
                 <div slot="end" style="display: flex; align-items: center; gap: 2px;">
+                  <ion-button fill="clear" color="primary" size="small" (click)="openEditExtra(item)">
+                    <ion-icon name="pencil-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
                   <div class="stock-area">
                     <span class="stock-label">Scorta</span>
                     <ion-input
@@ -283,9 +304,16 @@ export class ShoppingPage implements OnInit {
   loading = true;
   updatingItem: Set<string> = new Set();
   importingStock: Set<string> = new Set();
+  searchQuery = '';
 
-  get menuItems() { return this.allItems.filter(i => i.source === 'MENU'); }
-  get extraItems() { return this.allItems.filter(i => i.source === 'FUORI_MENU'); }
+  get filteredItems(): ShoppingItem[] {
+    const q = this.searchQuery.toLowerCase().trim();
+    if (!q) return this.allItems;
+    return this.allItems.filter(i => i.name.toLowerCase().includes(q));
+  }
+
+  get menuItems() { return this.filteredItems.filter(i => i.source === 'MENU'); }
+  get extraItems() { return this.filteredItems.filter(i => i.source === 'FUORI_MENU'); }
   get purchasedCount() { return this.allItems.filter(i => i.isPurchased).length; }
 
   constructor(
@@ -293,7 +321,7 @@ export class ShoppingPage implements OnInit {
     private alertCtrl: AlertController,
     private toastCtrl: ToastController
   ) {
-    addIcons({ add, trashOutline, refreshOutline, cartOutline, checkmarkCircle, storefrontOutline, peopleOutline });
+    addIcons({ add, trashOutline, refreshOutline, cartOutline, checkmarkCircle, storefrontOutline, peopleOutline, pencilOutline });
   }
 
   ngOnInit() { this.loadList(); }
@@ -398,6 +426,55 @@ export class ShoppingPage implements OnInit {
     this.shoppingService.addExtra(dto).subscribe({
       next: (item) => { this.allItems = [...this.allItems, item]; this.showToast('Extra aggiunto', 'success'); },
       error: async (e) => { await this.showToast(e.error?.message || 'Errore', 'danger'); }
+    });
+  }
+
+  async openEditExtra(item: ShoppingItem) {
+    const alert = await this.alertCtrl.create({
+      header: 'Modifica Extra',
+      inputs: [
+        { name: 'name', type: 'text', placeholder: 'Nome *', value: item.name },
+        { name: 'unit', type: 'text', placeholder: 'Unità: gr / ml / unit', value: item.unit },
+        { name: 'totalQty', type: 'number', placeholder: 'Quantità', value: String(item.totalQty), min: 0.01 }
+      ],
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Salva',
+          handler: (data) => {
+            if (!data.name?.trim()) {
+              this.showToast('Il nome è obbligatorio', 'warning');
+              return false;
+            }
+            const qty = parseFloat(data.totalQty);
+            if (isNaN(qty) || qty <= 0) {
+              this.showToast('La quantità deve essere > 0', 'warning');
+              return false;
+            }
+            const validUnits = ['gr', 'ml', 'unit'];
+            const unit = validUnits.includes(data.unit) ? data.unit : item.unit;
+            this.applyExtraEdit(item.id, {
+              name: data.name.trim(),
+              unit: unit as any,
+              totalQty: qty
+            });
+            return true;
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  applyExtraEdit(id: string, dto: Partial<ShoppingItem>) {
+    this.shoppingService.updateItem(id, dto).subscribe({
+      next: (updated) => {
+        this.allItems = this.allItems.map(i => i.id === id ? { ...i, ...updated } : i);
+        this.showToast('Extra aggiornato', 'success');
+      },
+      error: async (e) => {
+        await this.showToast(e.error?.message || 'Errore aggiornando extra', 'danger');
+      }
     });
   }
 

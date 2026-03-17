@@ -8,6 +8,7 @@ import { MenuDay } from '../src/menu/entities/menu-day.entity';
 import { Meal } from '../src/menu/entities/meal.entity';
 import { MealItem } from '../src/menu/entities/meal-item.entity';
 import { IngredientsService } from '../src/ingredients/ingredients.service';
+import { CollaborationService } from '../src/collaboration/collaboration.service';
 import { MealTypeEnum, UnitEnum } from '../src/ingredients/ingredient.entity';
 
 // ---- helpers to build mock objects ----
@@ -59,6 +60,7 @@ describe('MenuService', () => {
   let mealItemRepo: jest.Mocked<Repository<MealItem>>;
   let ingredientsService: jest.Mocked<IngredientsService>;
   let dataSource: jest.Mocked<DataSource>;
+  let collaborationService: jest.Mocked<CollaborationService>;
 
   const mockQB = (result: any) => ({
     leftJoinAndSelect: jest.fn().mockReturnThis(),
@@ -106,6 +108,10 @@ describe('MenuService', () => {
       transaction: jest.fn(),
     } as any;
 
+    collaborationService = {
+      getActiveCollaborators: jest.fn().mockResolvedValue([]),
+    } as any;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MenuService,
@@ -115,6 +121,7 @@ describe('MenuService', () => {
         { provide: getRepositoryToken(MealItem), useValue: mealItemRepo },
         { provide: IngredientsService, useValue: ingredientsService },
         { provide: DataSource, useValue: dataSource },
+        { provide: CollaborationService, useValue: collaborationService },
       ],
     }).compile();
 

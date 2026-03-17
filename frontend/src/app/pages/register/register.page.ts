@@ -65,7 +65,20 @@ import { AuthService } from '../../core/services/auth.service';
               <ion-input type="password" placeholder="min. 8 caratteri"
                 [(ngModel)]="password" (keyup.enter)="register()"></ion-input>
             </div>
-            <p class="hint">Almeno 8 caratteri, una maiuscola, un numero, un simbolo</p>
+          </div>
+          <div style="padding: 6px 16px 12px; font-size: 0.75rem; display: flex; flex-direction: column; gap: 3px;">
+            <span [style.color]="passwordRules.length ? '#2E7D32' : '#999'">
+              {{ passwordRules.length ? '✓' : '○' }} Almeno 8 caratteri
+            </span>
+            <span [style.color]="passwordRules.upper ? '#2E7D32' : '#999'">
+              {{ passwordRules.upper ? '✓' : '○' }} Una lettera maiuscola
+            </span>
+            <span [style.color]="passwordRules.number ? '#2E7D32' : '#999'">
+              {{ passwordRules.number ? '✓' : '○' }} Un numero
+            </span>
+            <span [style.color]="passwordRules.special ? '#2E7D32' : '#999'">
+              {{ passwordRules.special ? '✓' : '○' }} Un carattere speciale (!@#$...)
+            </span>
           </div>
 
           <div class="error-msg" *ngIf="error">{{ error }}</div>
@@ -85,6 +98,17 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class RegisterPage {
   email = ''; password = ''; error = ''; loading = false;
+
+  get passwordRules() {
+    const p = this.password || '';
+    return {
+      length: p.length >= 8,
+      upper: /[A-Z]/.test(p),
+      number: /[0-9]/.test(p),
+      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p)
+    };
+  }
+
   constructor(private auth: AuthService, private router: Router) {
     addIcons({ mailOutline, lockClosedOutline, leafOutline });
   }

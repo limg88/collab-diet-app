@@ -68,3 +68,49 @@ describe('DTO quantity validation — overflow prevention', () => {
     });
   });
 });
+
+// --- Ingredient defaultQty min validation ---
+describe('CreateIngredientDto defaultQty > 0', () => {
+  it('should reject defaultQty = 0', async () => {
+    const dto = plainToInstance(CreateIngredientDto, {
+      name: 'Test',
+      defaultUnit: UnitEnum.GR,
+      defaultQty: 0,
+    });
+    const errors = await validate(dto);
+    expect(errors.find(e => e.property === 'defaultQty')).toBeDefined();
+  });
+
+  it('should accept defaultQty = 0.01', async () => {
+    const dto = plainToInstance(CreateIngredientDto, {
+      name: 'Test',
+      defaultUnit: UnitEnum.GR,
+      defaultQty: 0.01,
+    });
+    const errors = await validate(dto);
+    expect(errors.find(e => e.property === 'defaultQty')).toBeUndefined();
+  });
+});
+
+describe('UpdateItemDto — FUORI_MENU fields', () => {
+  it('should accept name update', async () => {
+    const { UpdateItemDto } = await import('../src/shopping/dto/update-item.dto');
+    const dto = plainToInstance(UpdateItemDto, { name: 'Detersivo aggiornato' });
+    const errors = await validate(dto);
+    expect(errors.find(e => e.property === 'name')).toBeUndefined();
+  });
+
+  it('should reject invalid unit', async () => {
+    const { UpdateItemDto } = await import('../src/shopping/dto/update-item.dto');
+    const dto = plainToInstance(UpdateItemDto, { unit: 'kg' });
+    const errors = await validate(dto);
+    expect(errors.find(e => e.property === 'unit')).toBeDefined();
+  });
+
+  it('should accept valid unit update', async () => {
+    const { UpdateItemDto } = await import('../src/shopping/dto/update-item.dto');
+    const dto = plainToInstance(UpdateItemDto, { unit: 'ml' });
+    const errors = await validate(dto);
+    expect(errors.find(e => e.property === 'unit')).toBeUndefined();
+  });
+});

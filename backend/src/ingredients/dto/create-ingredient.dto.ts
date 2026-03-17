@@ -24,7 +24,7 @@ export class CreateIngredientDto {
   defaultUnit: UnitEnum;
 
   @IsNumber()
-  @Min(0)
+  @Min(0.01)
   @Max(99999)
   defaultQty: number;
 

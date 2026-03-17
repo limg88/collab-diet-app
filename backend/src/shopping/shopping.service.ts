@@ -178,6 +178,20 @@ export class ShoppingService {
     if (dto.isPurchased !== undefined) item.isPurchased = dto.isPurchased;
     if (dto.totalQty !== undefined) item.totalQty = dto.totalQty;
 
+    if (dto.name !== undefined) {
+      if (item.source !== ShoppingSourceEnum.FUORI_MENU)
+        throw new BadRequestException('Name can only be changed for FUORI_MENU items');
+      item.name = dto.name.trim();
+    }
+    if (dto.unit !== undefined) {
+      if (item.source !== ShoppingSourceEnum.FUORI_MENU)
+        throw new BadRequestException('Unit can only be changed for FUORI_MENU items');
+      item.unit = dto.unit as any;
+    }
+    if (dto.category !== undefined) {
+      item.category = dto.category || null;
+    }
+
     return this.shoppingItemRepo.save(item);
   }
 

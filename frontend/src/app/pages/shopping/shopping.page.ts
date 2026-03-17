@@ -135,74 +135,78 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       background: var(--ion-card-background);
     }
 
-    /* ─── Shop row ─── */
+    /* ─── Shop row — single line ─── */
     .shop-row {
       display: flex;
-      align-items: flex-start;
-      padding: 11px 12px 11px 10px;
-      gap: 10px;
+      align-items: center;
+      padding: 10px 8px 10px 10px;
+      gap: 7px;
       border-bottom: 1px solid var(--ion-border-color);
       background: var(--ion-item-background);
-      transition: opacity 0.2s, background 0.2s;
+      transition: opacity 0.2s;
     }
     .shop-row:last-child { border-bottom: none; }
     .shop-row.purchased { opacity: 0.45; }
 
     .shop-check {
-      --size: 22px;
+      --size: 20px;
       flex-shrink: 0;
-      margin-top: 2px;
     }
 
-    /* body */
-    .shop-body {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      align-items: flex-start;
-      gap: 6px;
-    }
-    .shop-content { flex: 1; min-width: 0; }
-
-    /* main line: name + pills */
-    .shop-main-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      min-height: 24px;
-    }
+    /* name — grows, truncates */
     .item-name {
       flex: 1;
       font-weight: 600;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       color: var(--ion-text-color);
-      min-width: 60px;
-      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
     }
     .item-name.crossed {
       text-decoration: line-through;
       color: var(--ion-color-medium);
     }
 
-    /* qty / covered pills */
-    .qty-pill {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: #e65100;
-      background: rgba(245,124,0,0.1);
-      border-radius: 20px;
-      padding: 2px 9px;
+    /* quantity in parentheses */
+    .item-qty {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--ion-color-medium);
       white-space: nowrap;
       flex-shrink: 0;
     }
-    .covered-pill {
+    .item-covered {
       font-size: 0.72rem;
       font-weight: 700;
-      background: rgba(46,125,50,0.1);
       color: var(--ion-color-primary);
-      border-radius: 20px;
-      padding: 2px 9px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* collab user badge — circle with initial */
+    .collab-badge {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--ion-color-secondary);
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      letter-spacing: 0;
+    }
+    .import-btn {
+      --color: #7B1FA2;
+      --padding-start: 4px;
+      --padding-end: 4px;
+      height: 20px;
+      font-size: 0.65rem;
+      font-weight: 700;
       flex-shrink: 0;
     }
 
@@ -210,65 +214,31 @@ import { Unit } from '../../features/ingredients/ingredients.service';
     .stock-wrap {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       background: var(--ion-color-light);
       border-radius: 8px;
-      padding: 3px 7px 3px 5px;
+      padding: 2px 6px 2px 4px;
       flex-shrink: 0;
     }
-    .stock-icon { font-size: 12px; color: var(--ion-color-medium); flex-shrink: 0; }
+    .stock-icon { font-size: 11px; color: var(--ion-color-medium); flex-shrink: 0; }
     .stock-input {
-      width: 38px;
+      width: 34px;
       --padding-start: 2px;
       --padding-end: 2px;
       --padding-top: 0;
       --padding-bottom: 0;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       --background: transparent;
       text-align: center;
     }
 
-    /* collab bar */
-    .collab-bar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 4px;
-      margin-top: 5px;
-      padding-top: 4px;
-      border-top: 1px solid var(--ion-border-color);
-    }
-    .collab-icon { font-size: 11px; color: var(--ion-color-secondary); flex-shrink: 0; }
-    .collab-tag {
-      font-size: 0.7rem;
-      color: #bf360c;
-      background: rgba(245,124,0,0.08);
-      border-radius: 4px;
-      padding: 1px 6px;
-    }
-    .collab-stock-tag {
-      font-size: 0.7rem;
-      color: #7B1FA2;
-      background: rgba(123,31,162,0.07);
-      border-radius: 4px;
-      padding: 1px 6px;
-    }
-    .import-btn {
-      --color: #7B1FA2;
-      --padding-start: 5px;
-      --padding-end: 5px;
-      height: 20px;
-      font-size: 0.68rem;
-      font-weight: 700;
-    }
-
     /* extra actions */
     .shop-actions {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       flex-shrink: 0;
-      margin-top: -4px;
+      gap: 0;
     }
   `],
   template: `
@@ -307,7 +277,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
           <ion-skeleton-text animated style="height:72px; margin:0;"></ion-skeleton-text>
         </div>
         <div style="margin:12px; border-radius:12px; overflow:hidden; margin-top:20px;">
-          <ion-skeleton-text animated style="height:56px; margin:0; border-bottom:1px solid #f2f2f2;"
+          <ion-skeleton-text animated style="height:56px; margin:0; border-bottom:1px solid var(--ion-border-color);"
             *ngFor="let x of [1,2,3,4]"></ion-skeleton-text>
         </div>
       </ng-container>
@@ -341,43 +311,16 @@ import { Unit } from '../../features/ingredients/ingredients.service';
           </div>
           <div class="list-wrap">
             <div class="shop-row" [class.purchased]="item.isPurchased" *ngFor="let item of menuItems">
-              <ion-checkbox
-                class="shop-check"
-                [checked]="item.isPurchased"
-                (ionChange)="togglePurchased(item)"
-                color="success">
-              </ion-checkbox>
-              <div class="shop-body">
-                <div class="shop-content">
-                  <div class="shop-main-row">
-                    <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
-                    <span class="covered-pill" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓ Coperto</span>
-                    <span class="qty-pill" *ngIf="getQtyToBuy(item) > 0">{{ getQtyToBuy(item) }} {{ item.unit }}</span>
-                    <div class="stock-wrap">
-                      <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
-                      <ion-input
-                        type="number"
-                        class="stock-input"
-                        [value]="item.stockQty"
-                        (ionChange)="updateStock(item, $event)"
-                        placeholder="0"
-                        min="0">
-                      </ion-input>
-                    </div>
-                  </div>
-                  <div class="collab-bar" *ngIf="hasCollaboratorData(item) || item.collaboratorStockQty > 0">
-                    <ion-icon name="people-outline" class="collab-icon"></ion-icon>
-                    <span class="collab-tag" *ngFor="let c of item.collaboratorBreakdown">
-                      {{ c.email.split('@')[0] }}: {{ c.qty }}{{ item.unit }}
-                    </span>
-                    <ng-container *ngIf="item.collaboratorStockQty > 0">
-                      <span class="collab-stock-tag">📦 {{ item.collaboratorStockQty }}{{ item.unit }}</span>
-                      <ion-button class="import-btn" fill="clear" size="small"
-                        [disabled]="importingStock.has(item.id)"
-                        (click)="importCollaboratorStock(item)">Importa</ion-button>
-                    </ng-container>
-                  </div>
-                </div>
+              <ion-checkbox class="shop-check" [checked]="item.isPurchased" (ionChange)="togglePurchased(item)" color="success"></ion-checkbox>
+              <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
+              <span class="item-qty" *ngIf="getQtyToBuy(item) > 0">({{ getQtyToBuy(item) }} {{ item.unit }})</span>
+              <span class="item-covered" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓</span>
+              <span class="collab-badge" *ngFor="let c of item.collaboratorBreakdown" [title]="c.email">{{ getEmailInitial(c.email) }}</span>
+              <ion-button class="import-btn" fill="clear" size="small" *ngIf="item.collaboratorStockQty > 0"
+                [disabled]="importingStock.has(item.id)" (click)="importCollaboratorStock(item)">+scorta</ion-button>
+              <div class="stock-wrap">
+                <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
+                <ion-input type="number" class="stock-input" [value]="item.stockQty" (ionChange)="updateStock(item, $event)" placeholder="0" min="0"></ion-input>
               </div>
             </div>
           </div>
@@ -392,39 +335,21 @@ import { Unit } from '../../features/ingredients/ingredients.service';
           </div>
           <div class="list-wrap">
             <div class="shop-row" [class.purchased]="item.isPurchased" *ngFor="let item of extraItems">
-              <ion-checkbox
-                class="shop-check"
-                [checked]="item.isPurchased"
-                (ionChange)="togglePurchased(item)"
-                color="success">
-              </ion-checkbox>
-              <div class="shop-body">
-                <div class="shop-content">
-                  <div class="shop-main-row">
-                    <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
-                    <span class="covered-pill" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓ Coperto</span>
-                    <span class="qty-pill" *ngIf="getQtyToBuy(item) > 0">{{ getQtyToBuy(item) }} {{ item.unit }}</span>
-                    <div class="stock-wrap">
-                      <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
-                      <ion-input
-                        type="number"
-                        class="stock-input"
-                        [value]="item.stockQty"
-                        (ionChange)="updateStock(item, $event)"
-                        placeholder="0"
-                        min="0">
-                      </ion-input>
-                    </div>
-                  </div>
-                </div>
-                <div class="shop-actions">
-                  <ion-button fill="clear" color="primary" size="small" (click)="openEditExtra(item)">
-                    <ion-icon name="pencil-outline" slot="icon-only"></ion-icon>
-                  </ion-button>
-                  <ion-button fill="clear" color="danger" size="small" (click)="deleteExtra(item.id)">
-                    <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-                  </ion-button>
-                </div>
+              <ion-checkbox class="shop-check" [checked]="item.isPurchased" (ionChange)="togglePurchased(item)" color="success"></ion-checkbox>
+              <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
+              <span class="item-qty" *ngIf="getQtyToBuy(item) > 0">({{ getQtyToBuy(item) }} {{ item.unit }})</span>
+              <span class="item-covered" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓</span>
+              <div class="stock-wrap">
+                <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
+                <ion-input type="number" class="stock-input" [value]="item.stockQty" (ionChange)="updateStock(item, $event)" placeholder="0" min="0"></ion-input>
+              </div>
+              <div class="shop-actions">
+                <ion-button fill="clear" color="primary" size="small" (click)="openEditExtra(item)">
+                  <ion-icon name="pencil-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+                <ion-button fill="clear" color="danger" size="small" (click)="deleteExtra(item.id)">
+                  <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                </ion-button>
               </div>
             </div>
           </div>
@@ -501,6 +426,10 @@ export class ShoppingPage implements OnInit {
 
   hasCollaboratorData(item: ShoppingItem): boolean {
     return !!(item.collaboratorBreakdown?.length);
+  }
+
+  getEmailInitial(email: string): string {
+    return (email?.split('@')[0]?.[0] ?? '?').toUpperCase();
   }
 
   togglePurchased(item: ShoppingItem) {

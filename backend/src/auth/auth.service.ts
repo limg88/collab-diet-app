@@ -16,7 +16,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<{ accessToken: string }> {
+  async register(dto: RegisterDto): Promise<{ access_token: string }> {
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) {
       throw new ConflictException('Email already registered');
@@ -27,10 +27,10 @@ export class AuthService {
 
     const payload = { sub: user.id, email: user.email };
     const accessToken = this.jwtService.sign(payload);
-    return { accessToken };
+    return { access_token: accessToken };
   }
 
-  async login(dto: LoginDto): Promise<{ accessToken: string }> {
+  async login(dto: LoginDto): Promise<{ access_token: string }> {
     const user = await this.usersService.findByEmail(dto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -43,6 +43,6 @@ export class AuthService {
 
     const payload = { sub: user.id, email: user.email };
     const accessToken = this.jwtService.sign(payload);
-    return { accessToken };
+    return { access_token: accessToken };
   }
 }

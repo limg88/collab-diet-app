@@ -85,12 +85,16 @@ export class CollaborationService {
     return this.inviteRepo.save(invite);
   }
 
-  async getInvites(userId: string): Promise<CollaborationInvite[]> {
-    return this.inviteRepo.find({
+  async getInvites(userId: string): Promise<{ sent: CollaborationInvite[]; received: CollaborationInvite[] }> {
+    const all = await this.inviteRepo.find({
       where: [{ senderId: userId }, { receiverId: userId }],
       relations: ['sender', 'receiver'],
       order: { createdAt: 'DESC' },
     });
+    return {
+      sent: all.filter(i => i.senderId === userId),
+      received: all.filter(i => i.receiverId === userId),
+    };
   }
 
   async getActiveCollaborators(userId: string): Promise<User[]> {

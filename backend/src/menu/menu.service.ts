@@ -95,7 +95,7 @@ export class MenuService {
 
     const previousMenu = await this.loadFullMenu(userId, prevWeekStart);
 
-    return this.dataSource.transaction(async (manager) => {
+    await this.dataSource.transaction(async (manager) => {
       const menu = manager.create(WeeklyMenu, { userId, weekStart });
       const savedMenu = await manager.save(WeeklyMenu, menu);
 
@@ -129,9 +129,11 @@ export class MenuService {
           }
         }
       }
-
-      return this.loadFullMenu(userId, weekStart);
+      // No return here — transaction just commits the writes
     });
+
+    // Now load full menu AFTER transaction has committed
+    return this.loadFullMenu(userId, weekStart) as Promise<WeeklyMenu>;
   }
 
   async addMealItem(userId: string, dto: AddMealItemDto): Promise<MealItem> {

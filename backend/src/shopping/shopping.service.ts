@@ -40,6 +40,16 @@ export class ShoppingService {
   async syncMenuItems(userId: string): Promise<void> {
     const weekStart = getMondayOfCurrentWeekRome();
 
+    // Preserve existing user-set values before deleting
+    const existingItems = await this.shoppingItemRepo.find({
+      where: { userId, weekStart, source: ShoppingSourceEnum.MENU },
+    });
+    const preserved = new Map<string, { stockQty: number; isPurchased: boolean }>();
+    for (const item of existingItems) {
+      const key = `${item.name.toLowerCase()}::${item.unit}`;
+      preserved.set(key, { stockQty: Number(item.stockQty), isPurchased: item.isPurchased });
+    }
+
     // Delete existing MENU items for the current week
     await this.shoppingItemRepo.delete({
       userId,
@@ -92,9 +102,11 @@ export class ShoppingService {
       }
     }
 
-    // Persist aggregated MENU items
+    // Persist aggregated MENU items, restoring preserved user values
     const toSave: Partial<ShoppingItem>[] = [];
     for (const agg of aggregationMap.values()) {
+      const key = `${agg.name.toLowerCase()}::${agg.unit}`;
+      const prev = preserved.get(key);
       toSave.push({
         userId,
         weekStart,
@@ -103,8 +115,8 @@ export class ShoppingService {
         category: agg.category,
         unit: agg.unit as any,
         totalQty: agg.totalQty,
-        stockQty: 0,
-        isPurchased: false,
+        stockQty: prev?.stockQty ?? 0,
+        isPurchased: prev?.isPurchased ?? false,
         collaboratorBreakdown: agg.breakdown.length > 1 ? agg.breakdown : null,
       });
     }

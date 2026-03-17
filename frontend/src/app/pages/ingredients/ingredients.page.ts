@@ -208,9 +208,7 @@ export class IngredientsPage implements OnInit {
       inputs: [
         { name: 'name', type: 'text', placeholder: 'Nome *' },
         { name: 'category', type: 'text', placeholder: 'Categoria (es. Latticini, Cereali)' },
-        { type: 'radio', label: 'Grammi (gr)', value: 'gr', checked: true, name: 'unit' },
-        { type: 'radio', label: 'Millilitri (ml)', value: 'ml', name: 'unit' },
-        { type: 'radio', label: 'Pezzi (unit)', value: 'unit', name: 'unit' },
+        { name: 'defaultUnit', type: 'text', placeholder: 'Unità: gr / ml / unit', value: 'gr' },
         { name: 'defaultQty', type: 'number', placeholder: 'Quantità default (es. 100)', value: '100', min: 1 }
       ],
       buttons: [
@@ -221,7 +219,7 @@ export class IngredientsPage implements OnInit {
             if (!data.name?.trim()) { this.showToast('Il nome è obbligatorio', 'warning'); return false; }
             const qty = parseFloat(data.defaultQty);
             if (isNaN(qty) || qty <= 0) { this.showToast('La quantità deve essere > 0', 'warning'); return false; }
-            const unit = (['gr', 'ml', 'unit'].includes(data.unit)) ? data.unit as Unit : 'gr';
+            const unit: Unit = (['gr', 'ml', 'unit'].includes(data.defaultUnit)) ? data.defaultUnit as Unit : 'gr';
             this.createIngredient({ name: data.name.trim(), category: data.category?.trim() || undefined, defaultUnit: unit, defaultQty: qty });
             return true;
           }
@@ -248,9 +246,7 @@ export class IngredientsPage implements OnInit {
       inputs: [
         { name: 'name', type: 'text', value: ing.name },
         { name: 'category', type: 'text', placeholder: 'Categoria', value: ing.category || '' },
-        { type: 'radio', label: 'Grammi (gr)', value: 'gr', checked: ing.defaultUnit === 'gr', name: 'unit' },
-        { type: 'radio', label: 'Millilitri (ml)', value: 'ml', checked: ing.defaultUnit === 'ml', name: 'unit' },
-        { type: 'radio', label: 'Pezzi (unit)', value: 'unit', checked: ing.defaultUnit === 'unit', name: 'unit' },
+        { name: 'defaultUnit', type: 'text', placeholder: 'Unità: gr / ml / unit', value: ing.defaultUnit },
         { name: 'defaultQty', type: 'number', value: String(ing.defaultQty), min: 1 }
       ],
       buttons: [
@@ -261,7 +257,7 @@ export class IngredientsPage implements OnInit {
             if (!data.name?.trim()) { this.showToast('Il nome è obbligatorio', 'warning'); return false; }
             const qty = parseFloat(data.defaultQty);
             if (isNaN(qty) || qty <= 0) { this.showToast('La quantità deve essere > 0', 'warning'); return false; }
-            const selectedUnit: Unit = (['gr', 'ml', 'unit'].includes(data.unit)) ? data.unit as Unit : ing.defaultUnit;
+            const selectedUnit: Unit = (['gr', 'ml', 'unit'].includes(data.defaultUnit)) ? data.defaultUnit as Unit : ing.defaultUnit;
             this.updateIngredient(ing.id, { name: data.name.trim(), category: data.category?.trim() || undefined, defaultUnit: selectedUnit, defaultQty: qty });
             return true;
           }

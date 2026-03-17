@@ -293,9 +293,7 @@ export class ShoppingPage implements OnInit {
       header: 'Aggiungi Extra',
       inputs: [
         { name: 'name', type: 'text', placeholder: 'Articolo *' },
-        { type: 'radio', label: 'Pezzi (unit)', value: 'unit', checked: true, name: 'unit' },
-        { type: 'radio', label: 'Grammi (gr)', value: 'gr', name: 'unit' },
-        { type: 'radio', label: 'Millilitri (ml)', value: 'ml', name: 'unit' },
+        { name: 'unit', type: 'text', placeholder: 'Unità: gr / ml / unit', value: 'unit' },
         { name: 'totalQty', type: 'number', placeholder: 'Quantità', value: '1', min: 1 }
       ],
       buttons: [

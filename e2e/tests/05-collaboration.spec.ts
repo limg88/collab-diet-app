@@ -1,0 +1,88 @@
+import { test, expect } from '@playwright/test';
+import { uniqueEmail, registerUser, loginUser } from './helpers/api';
+import { loginViaUI } from './helpers/auth';
+
+const PASSWORD = 'Test1234!';
+
+test.describe('Collaborazione', () => {
+  let emailA: string;
+  let emailB: string;
+  let tokenB: string;
+
+  test.beforeEach(async ({ request }) => {
+    emailA = uniqueEmail();
+    emailB = uniqueEmail();
+    await registerUser(request, { email: emailA, password: PASSWORD });
+    tokenB = await registerUser(request, { email: emailB, password: PASSWORD });
+  });
+
+  test('pagina collaborazione carica correttamente', async ({ page, request }) => {
+    await loginViaUI(page, emailA, PASSWORD);
+    await page.locator('ion-tab-button[tab="collaboration"]').click();
+    await expect(page).toHaveURL(/\/collaboration/);
+    await expect(page.locator('ion-title')).toContainText('Collaboratori');
+  });
+
+  test('invia invito di collaborazione', async ({ page, request }) => {
+    await loginViaUI(page, emailA, PASSWORD);
+    await page.locator('ion-tab-button[tab="collaboration"]').click();
+
+    await page.locator('ion-input[type="email"]').click();
+    await page.locator('ion-input[type="email"]').fill(emailB);
+    await page.getByRole('button', { name: 'Invia Invito' }).click();
+
+    // Should show success toast
+    await expect(page.locator('ion-toast')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('errore invitando email non registrata', async ({ page }) => {
+    await loginViaUI(page, emailA, PASSWORD);
+    await page.locator('ion-tab-button[tab="collaboration"]').click();
+
+    await page.locator('ion-input[type="email"]').click();
+    await page.locator('ion-input[type="email"]').fill('nonexistent@nowhere.test');
+    await page.getByRole('button', { name: 'Invia Invito' }).click();
+
+    await expect(page.locator('ion-toast[color="danger"]')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('accetta invito ricevuto', async ({ page, request }) => {
+    // User A sends invite to User B via API
+    const API_BASE = 'http://localhost:3000/api/v1';
+    const tokenA = await loginUser(request, { email: emailA, password: PASSWORD });
+    await request.post(`${API_BASE}/collaboration/invite`, {
+      data: { email: emailB },
+      headers: { Authorization: `Bearer ${tokenA}` }
+    });
+
+    // User B logs in and accepts
+    await loginViaUI(page, emailB, PASSWORD);
+    await page.locator('ion-tab-button[tab="collaboration"]').click();
+
+    // Pending invites section should show invite from A
+    await expect(page.locator('.invite-card').filter({ hasText: emailA })).toBeVisible({ timeout: 8000 });
+    await page.locator('.invite-card').filter({ hasText: emailA })
+      .getByRole('button', { name: /accetta/i }).click();
+
+    // Collaborator should now appear
+    await expect(page.locator('.collaborator-item').filter({ hasText: emailA })).toBeVisible({ timeout: 5000 });
+  });
+
+  test('rifiuta invito ricevuto', async ({ page, request }) => {
+    const API_BASE = 'http://localhost:3000/api/v1';
+    const tokenA = await loginUser(request, { email: emailA, password: PASSWORD });
+    await request.post(`${API_BASE}/collaboration/invite`, {
+      data: { email: emailB },
+      headers: { Authorization: `Bearer ${tokenA}` }
+    });
+
+    await loginViaUI(page, emailB, PASSWORD);
+    await page.locator('ion-tab-button[tab="collaboration"]').click();
+
+    await expect(page.locator('.invite-card').filter({ hasText: emailA })).toBeVisible({ timeout: 8000 });
+    await page.locator('.invite-card').filter({ hasText: emailA })
+      .getByRole('button', { name: /rifiuta/i }).click();
+
+    await expect(page.locator('.collaborator-item')).not.toBeVisible({ timeout: 5000 });
+  });
+});

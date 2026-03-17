@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar,
-  IonList, IonItem, IonLabel, IonButton, IonIcon, IonButtons,
+  IonList, IonItem, IonLabel, IonButton, IonIcon, IonButtons, IonInput,
   ModalController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { closeOutline } from 'ionicons/icons';
+import { closeOutline, arrowBackOutline } from 'ionicons/icons';
 import { Ingredient, MealType } from '../../features/ingredients/ingredients.service';
 
 @Component({
@@ -16,7 +16,7 @@ import { Ingredient, MealType } from '../../features/ingredients/ingredients.ser
   imports: [
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar,
-    IonList, IonItem, IonLabel, IonButton, IonIcon, IonButtons
+    IonList, IonItem, IonLabel, IonButton, IonIcon, IonButtons, IonInput
   ],
   styles: [`
     ion-toolbar { --background: var(--ion-color-primary); --color: white; }
@@ -37,18 +37,32 @@ import { Ingredient, MealType } from '../../features/ingredients/ingredients.ser
       margin-right: 6px;
     }
     .empty { text-align: center; padding: 40px 20px; color: var(--ion-color-medium); }
+    .qty-step { padding: 32px 24px; display: flex; flex-direction: column; gap: 24px; }
+    .qty-ingredient-card { background: rgba(46,125,50,0.06); border-radius: 12px; padding: 16px; }
+    .qty-ing-name { font-weight: 700; font-size: 1.1rem; color: #1a1a1a; }
+    .qty-ing-unit { font-size: 0.82rem; color: var(--ion-color-medium); margin-top: 3px; }
+    .qty-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ion-color-medium); margin-bottom: 8px; }
+    .qty-input-wrap { background: white; border: 2px solid var(--ion-color-primary); border-radius: 12px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; }
+    .qty-main-input { font-size: 1.6rem; font-weight: 700; color: var(--ion-color-primary); --padding-start: 0; text-align: center; flex: 1; }
+    .qty-unit-label { font-size: 1rem; font-weight: 600; color: #888; flex-shrink: 0; }
+    .confirm-btn { --background: var(--ion-color-primary); --border-radius: 12px; font-weight: 700; font-size: 1rem; height: 52px; }
   `],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>{{ mealLabel }}</ion-title>
+        <ion-buttons slot="start" *ngIf="selectedIngredient">
+          <ion-button (click)="backToList()">
+            <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title>{{ selectedIngredient ? selectedIngredient.name : mealLabel }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="dismiss()">
             <ion-icon name="close-outline" slot="icon-only"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
-      <ion-toolbar style="--background: var(--ion-color-primary);">
+      <ion-toolbar style="--background: var(--ion-color-primary);" *ngIf="!selectedIngredient">
         <ion-searchbar
           placeholder="Cerca ingrediente..."
           [(ngModel)]="query"
@@ -57,7 +71,7 @@ import { Ingredient, MealType } from '../../features/ingredients/ingredients.ser
         </ion-searchbar>
       </ion-toolbar>
     </ion-header>
-    <ion-content>
+    <ion-content *ngIf="!selectedIngredient">
       <ion-list lines="inset">
         <ion-item
           class="ing-row"
@@ -78,6 +92,24 @@ import { Ingredient, MealType } from '../../features/ingredients/ingredients.ser
         <p>Nessun ingrediente trovato</p>
       </div>
     </ion-content>
+    <ion-content *ngIf="selectedIngredient">
+      <div class="qty-step">
+        <div class="qty-ingredient-card">
+          <div class="qty-ing-name">{{ selectedIngredient.name }}</div>
+          <div class="qty-ing-unit">{{ selectedIngredient.defaultUnit }}</div>
+        </div>
+        <div>
+          <p class="qty-label">Quantità</p>
+          <div class="qty-input-wrap">
+            <ion-input type="number" [(ngModel)]="selectedQty" min="0.1" step="any" inputmode="decimal" class="qty-main-input"></ion-input>
+            <span class="qty-unit-label">{{ selectedIngredient.defaultUnit }}</span>
+          </div>
+        </div>
+        <ion-button expand="block" class="confirm-btn" (click)="confirm()">
+          ✓ Aggiungi al pasto
+        </ion-button>
+      </div>
+    </ion-content>
   `
 })
 export class IngredientPickerComponent implements OnInit {
@@ -87,17 +119,18 @@ export class IngredientPickerComponent implements OnInit {
 
   query = '';
   filtered: Ingredient[] = [];
+  selectedIngredient: Ingredient | null = null;
+  selectedQty = 100;
 
   private readonly unitColors: Record<string, string> = {
     gr: '#2E7D32', ml: '#1565C0', unit: '#7B1FA2'
   };
 
   constructor(private modalCtrl: ModalController) {
-    addIcons({ closeOutline });
+    addIcons({ closeOutline, arrowBackOutline });
   }
 
   ngOnInit() {
-    // Filter by allowed meal types if applicable
     const base = this.mealType
       ? this.ingredients.filter(i =>
           !i.allowedMealTypes?.length || i.allowedMealTypes.includes(this.mealType!)
@@ -118,7 +151,17 @@ export class IngredientPickerComponent implements OnInit {
   }
 
   select(ing: Ingredient) {
-    this.modalCtrl.dismiss(ing, 'selected');
+    this.selectedIngredient = ing;
+    this.selectedQty = ing.defaultQty;
+  }
+
+  backToList() {
+    this.selectedIngredient = null;
+  }
+
+  confirm() {
+    if (!this.selectedIngredient) return;
+    this.modalCtrl.dismiss({ ingredient: this.selectedIngredient, quantity: this.selectedQty }, 'selected');
   }
 
   dismiss() {

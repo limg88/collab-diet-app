@@ -69,6 +69,21 @@ test.describe('Lista della Spesa', () => {
     await expect(page.locator('.section-label').filter({ hasText: 'Extra' })).toBeVisible();
   });
 
+  test('scorta disponibile per articoli extra', async ({ page, request }) => {
+    const API_BASE = 'http://localhost:3000/api/v1';
+    await request.post(`${API_BASE}/shopping/extras`, {
+      data: { name: 'Sale', unit: 'gr', totalQty: 500 },
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    await page.reload();
+    const extraItem = page.locator('.shop-item').filter({ hasText: 'Sale' });
+    await expect(extraItem).toBeVisible({ timeout: 8000 });
+
+    // Extra item should have a stock input
+    await expect(extraItem.locator('.stock-input')).toBeVisible();
+  });
+
   test('elimina articolo extra', async ({ page, request }) => {
     const API_BASE = 'http://localhost:3000/api/v1';
     await request.post(`${API_BASE}/shopping/extras`, {

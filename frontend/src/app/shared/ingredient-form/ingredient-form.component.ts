@@ -52,9 +52,13 @@ const ALL_MEAL_TYPES: MealType[] = ['BREAKFAST','MORNING_SNACK','LUNCH','AFTERNO
     .cat-suggestions {
       padding: 4px 12px 8px;
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
     }
+    .cat-suggestions::-webkit-scrollbar { display: none; }
     .cat-chip {
       --background: rgba(46,125,50,0.1);
       --color: var(--ion-color-primary);

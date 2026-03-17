@@ -6,15 +6,16 @@ import {
   IonList, IonItem, IonLabel, IonButton, IonIcon,
   IonInput, IonBadge,
   IonSkeletonText,
-  AlertController, ToastController
+  AlertController, ToastController, ModalController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { checkmarkOutline, closeOutline, personRemoveOutline, mailOutline, peopleOutline, refreshOutline, sendOutline, personAddOutline } from 'ionicons/icons';
+import { checkmarkOutline, closeOutline, personRemoveOutline, mailOutline, peopleOutline, refreshOutline, sendOutline, personAddOutline, calendarOutline } from 'ionicons/icons';
 import {
   CollaborationService,
   Collaborator,
   Invite
 } from '../../features/collaboration/collaboration.service';
+import { CollaboratorMenuComponent } from '../../shared/collaborator-menu/collaborator-menu.component';
 
 const STATUS_IT: Record<string, string> = {
   PENDING: 'In attesa',
@@ -31,7 +32,8 @@ const STATUS_IT: Record<string, string> = {
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons,
     IonList, IonItem, IonLabel, IonButton, IonIcon,
     IonInput, IonBadge,
-    IonSkeletonText
+    IonSkeletonText,
+    CollaboratorMenuComponent
   ],
   styles: [`
     .collab-content {
@@ -347,6 +349,9 @@ const STATUS_IT: Record<string, string> = {
               <div class="collab-info">
                 <div class="collab-email">{{ c.email }}</div>
               </div>
+              <ion-button fill="outline" color="primary" size="small" (click)="viewMenu(c)" style="--border-radius: 8px; height: 34px; font-size: 0.78rem; font-weight: 700;">
+                Vedi menù
+              </ion-button>
             </div>
           </div>
 
@@ -400,9 +405,10 @@ export class CollaborationPage implements OnInit {
   constructor(
     private collaborationService: CollaborationService,
     private alertCtrl: AlertController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private modalCtrl: ModalController
   ) {
-    addIcons({ checkmarkOutline, closeOutline, personRemoveOutline, mailOutline, peopleOutline, refreshOutline, sendOutline, personAddOutline });
+    addIcons({ checkmarkOutline, closeOutline, personRemoveOutline, mailOutline, peopleOutline, refreshOutline, sendOutline, personAddOutline, calendarOutline });
   }
 
   ngOnInit() {
@@ -501,6 +507,14 @@ export class CollaborationPage implements OnInit {
     const parts = email.split('@')[0].split(/[._\-]/);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return email.substring(0, 2).toUpperCase();
+  }
+
+  async viewMenu(c: Collaborator) {
+    const modal = await this.modalCtrl.create({
+      component: CollaboratorMenuComponent,
+      componentProps: { collaboratorId: c.id, collaboratorEmail: c.email }
+    });
+    await modal.present();
   }
 
   getStatusLabel(status: string): string {

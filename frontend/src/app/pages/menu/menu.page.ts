@@ -51,7 +51,6 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       scrollbar-width: none;
       -ms-overflow-style: none;
       -webkit-overflow-scrolling: touch;
-      scroll-snap-type: x mandatory;
     }
     .day-selector-bar::-webkit-scrollbar { display: none; }
 
@@ -59,8 +58,9 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-width: 44px;
-      flex-shrink: 0;
+      flex: 1;
+      min-width: 40px;
+      max-width: 58px;
       padding: 6px 4px;
       border-radius: 10px;
       cursor: pointer;
@@ -68,7 +68,6 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       background: rgba(255,255,255,0.15);
       color: rgba(255,255,255,0.8);
       border: 2px solid transparent;
-      scroll-snap-align: start;
     }
     .day-pill.selected {
       background: white;
@@ -395,10 +394,10 @@ export class MenuPage implements OnInit {
     });
 
     await modal.present();
-    const { data, role } = await modal.onWillDismiss<Ingredient>();
+    const { data, role } = await modal.onWillDismiss<{ ingredient: Ingredient; quantity: number }>();
 
     if (role === 'selected' && data) {
-      this.addItem(dayOfWeek, mealType, data.id, data.defaultQty, data.defaultUnit);
+      this.addItem(dayOfWeek, mealType, data.ingredient.id, data.quantity, data.ingredient.defaultUnit);
     }
   }
 
@@ -412,6 +411,7 @@ export class MenuPage implements OnInit {
         const day = this.days.find(d => d.dayOfWeek === dayOfWeek);
         const meal = day?.meals.find(m => m.mealType === mealType);
         if (meal) meal.items = [...meal.items, enriched];
+        this.showToast('✅ Aggiunto al pasto', 'success');
       },
       error: async (e) => {
         this.addingItem = false;

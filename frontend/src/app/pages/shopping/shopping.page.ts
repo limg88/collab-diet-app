@@ -217,12 +217,25 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                 <ion-label>
                   <div class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</div>
                   <div class="item-sub">
-                    <span class="qty-to-buy">{{ item.totalQty }} {{ item.unit }}</span>
+                    <span class="qty-to-buy">{{ getQtyToBuy(item) }} {{ item.unit }}</span>
+                    <span class="qty-total" *ngIf="item.stockQty > 0">(scorta: {{ item.stockQty }})</span>
                   </div>
                 </ion-label>
-                <ion-button slot="end" fill="clear" color="danger" size="small" (click)="deleteExtra(item.id)">
-                  <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-                </ion-button>
+                <div slot="end" style="display: flex; align-items: center; gap: 2px;">
+                  <div class="stock-area">
+                    <span class="stock-label">Scorta</span>
+                    <ion-input
+                      type="number"
+                      class="stock-input"
+                      [value]="item.stockQty"
+                      (ionChange)="updateStock(item, $event)"
+                      min="0">
+                    </ion-input>
+                  </div>
+                  <ion-button fill="clear" color="danger" size="small" (click)="deleteExtra(item.id)">
+                    <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </div>
               </ion-item>
             </ion-list>
           </div>

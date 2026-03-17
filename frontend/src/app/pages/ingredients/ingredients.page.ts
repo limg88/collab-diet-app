@@ -5,7 +5,7 @@ import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonSearchbar,
   IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge,
   IonFab, IonFabButton, IonSkeletonText, IonChip,
-  AlertController, ModalController, ToastController
+  AlertController, ModalController, ToastController, ActionSheetController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { add, pencilOutline, trashOutline, nutritionOutline } from 'ionicons/icons';
@@ -119,14 +119,14 @@ const UNIT_COLORS: Record<Unit, string> = {
             (click)="setUnitFilter(u)">
             {{ u }}
           </ion-chip>
-          <!-- Category filters -->
+          <!-- Category filter chip -->
           <ion-chip
-            *ngFor="let cat of existingCategories"
-            [style.--background]="activeCategoryFilter === cat ? 'var(--ion-color-secondary)' : 'rgba(0,0,0,0.07)'"
-            [style.--color]="activeCategoryFilter === cat ? 'white' : '#555'"
+            *ngIf="existingCategories.length > 0"
+            [style.--background]="activeCategoryFilter ? 'var(--ion-color-secondary)' : 'rgba(0,0,0,0.07)'"
+            [style.--color]="activeCategoryFilter ? 'white' : '#555'"
             style="font-size: 0.78rem; height: 28px; flex-shrink: 0;"
-            (click)="setCategoryFilter(cat)">
-            {{ cat }}
+            (click)="openCategorySheet()">
+            {{ activeCategoryFilter ? activeCategoryFilter : 'Categoria ▾' }}
           </ion-chip>
           <!-- Clear filters -->
           <ion-chip
@@ -208,7 +208,8 @@ export class IngredientsPage implements OnInit {
     private ingredientsService: IngredientsService,
     private alertCtrl: AlertController,
     private modalCtrl: ModalController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private actionSheetCtrl: ActionSheetController
   ) {
     addIcons({ add, pencilOutline, trashOutline, nutritionOutline });
   }
@@ -248,6 +249,25 @@ export class IngredientsPage implements OnInit {
   setUnitFilter(unit: string) {
     this.activeUnitFilter = this.activeUnitFilter === unit ? null : unit as Unit;
     this.filterIngredients();
+  }
+
+  async openCategorySheet() {
+    const buttons = this.existingCategories.map(cat => ({
+      text: cat,
+      cssClass: this.activeCategoryFilter === cat ? 'action-selected' : '',
+      handler: () => { this.setCategoryFilter(cat); }
+    }));
+    buttons.push({
+      text: 'Tutte le categorie',
+      cssClass: this.activeCategoryFilter === null ? 'action-selected' : '',
+      handler: () => { this.setCategoryFilter(null); }
+    });
+    buttons.push({ text: 'Annulla', role: 'cancel' } as any);
+    const sheet = await this.actionSheetCtrl.create({
+      header: 'Filtra per categoria',
+      buttons
+    });
+    await sheet.present();
   }
 
   setCategoryFilter(cat: string | null) {

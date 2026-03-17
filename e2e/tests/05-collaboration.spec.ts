@@ -86,6 +86,62 @@ test.describe('Collaborazione', () => {
     await expect(page.locator('.collaborator-item')).not.toBeVisible({ timeout: 5000 });
   });
 
+  test('pulsante vedi menù visibile per collaboratore accettato', async ({ page, request }) => {
+    const API_BASE = 'http://localhost:3000/api/v1';
+    const tokenA = await loginUser(request, { email: emailA, password: PASSWORD });
+
+    await request.post(`${API_BASE}/collaboration/invite`, {
+      data: { email: emailB },
+      headers: { Authorization: `Bearer ${tokenA}` }
+    });
+
+    const invitesRes = await request.get(`${API_BASE}/collaboration/invites`, {
+      headers: { Authorization: `Bearer ${tokenB}` }
+    });
+    const { received } = await invitesRes.json();
+    await request.patch(`${API_BASE}/collaboration/invites/${received[0].id}/accept`, {
+      headers: { Authorization: `Bearer ${tokenB}` }
+    });
+
+    // A logs in and should see B with "Vedi menù" button
+    await loginViaUI(page, emailA, PASSWORD);
+    await page.locator('ion-tab-button[tab="collaboration"]').click();
+
+    const collabRow = page.locator('.collab-row').filter({ hasText: emailB });
+    await expect(collabRow).toBeVisible({ timeout: 8000 });
+    await expect(collabRow.getByRole('button', { name: /vedi menù/i })).toBeVisible();
+  });
+
+  test('apre menù del collaboratore in modale', async ({ page, request }) => {
+    const API_BASE = 'http://localhost:3000/api/v1';
+    const tokenA = await loginUser(request, { email: emailA, password: PASSWORD });
+
+    await request.post(`${API_BASE}/collaboration/invite`, {
+      data: { email: emailB },
+      headers: { Authorization: `Bearer ${tokenA}` }
+    });
+
+    const invitesRes = await request.get(`${API_BASE}/collaboration/invites`, {
+      headers: { Authorization: `Bearer ${tokenB}` }
+    });
+    const { received } = await invitesRes.json();
+    await request.patch(`${API_BASE}/collaboration/invites/${received[0].id}/accept`, {
+      headers: { Authorization: `Bearer ${tokenB}` }
+    });
+
+    await loginViaUI(page, emailA, PASSWORD);
+    await page.locator('ion-tab-button[tab="collaboration"]').click();
+
+    const collabRow = page.locator('.collab-row').filter({ hasText: emailB });
+    await expect(collabRow).toBeVisible({ timeout: 8000 });
+    await collabRow.getByRole('button', { name: /vedi menù/i }).click();
+
+    // Collaborator menu modal opens
+    await expect(page.locator('ion-modal')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('ion-modal ion-title')).toContainText(emailB);
+    await expect(page.locator('ion-modal .day-pill')).toHaveCount(7, { timeout: 5000 });
+  });
+
   test('invito rifiutato non ricompare dopo refresh', async ({ page, request }) => {
     const API_BASE = 'http://localhost:3000/api/v1';
     const tokenA = await loginUser(request, { email: emailA, password: PASSWORD });

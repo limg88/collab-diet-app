@@ -26,26 +26,67 @@ test.describe('Menù Settimanale', () => {
     await expect(page.locator('.meal-section').first()).toBeVisible({ timeout: 8000 });
   });
 
-  test('aggiunge alimento al pasto', async ({ page, request }) => {
-    // Create ingredient via API
+  test('aggiunge alimento al pasto via modal picker', async ({ page, request }) => {
     const ing = await createIngredient(request, token, { name: 'Uova', defaultUnit: 'unit', defaultQty: 2 });
 
     await page.reload();
     await expect(page.locator('.meal-section').first()).toBeVisible({ timeout: 8000 });
 
-    // Click "+" button on first meal (Colazione)
     await page.locator('.meal-section').first().locator('.add-btn').click();
 
-    const alert = page.locator('ion-alert');
-    await expect(alert).toBeVisible({ timeout: 5000 });
+    // Modal picker should open
+    await expect(page.locator('ion-modal')).toBeVisible({ timeout: 5000 });
 
-    // Select the ingredient radio
-    await alert.locator(`input[value="${ing.id}"]`).check();
-    await alert.getByRole('button', { name: 'Aggiungi' }).click();
-    await expect(alert).not.toBeVisible({ timeout: 5000 });
+    // Click the ingredient
+    await page.locator('ion-modal .ing-row').filter({ hasText: 'Uova' }).click();
 
-    // Item should appear in the meal
+    // Quantity step appears
+    await expect(page.locator('ion-modal .qty-step')).toBeVisible({ timeout: 3000 });
+
+    // Confirm with default quantity
+    await page.locator('ion-modal .confirm-btn').click();
+
+    await expect(page.locator('ion-modal')).not.toBeVisible({ timeout: 5000 });
     await expect(page.locator('.item-name').filter({ hasText: 'Uova' })).toBeVisible({ timeout: 5000 });
+  });
+
+  test('quantità modificabile prima di aggiungere al pasto', async ({ page, request }) => {
+    const ing = await createIngredient(request, token, { name: 'Riso', defaultUnit: 'gr', defaultQty: 80 });
+
+    await page.reload();
+    await expect(page.locator('.meal-section').first()).toBeVisible({ timeout: 8000 });
+
+    await page.locator('.meal-section').first().locator('.add-btn').click();
+    await expect(page.locator('ion-modal')).toBeVisible({ timeout: 5000 });
+
+    await page.locator('ion-modal .ing-row').filter({ hasText: 'Riso' }).click();
+    await expect(page.locator('ion-modal .qty-step')).toBeVisible({ timeout: 3000 });
+
+    // Modify quantity
+    const qtyInput = page.locator('ion-modal .qty-main-input');
+    await qtyInput.clear();
+    await qtyInput.fill('150');
+    await page.locator('ion-modal .confirm-btn').click();
+
+    // Item should appear with modified quantity
+    await expect(page.locator('.item-qty').filter({ hasText: '150' })).toBeVisible({ timeout: 5000 });
+  });
+
+  test('feedback toast dopo aggiunta alimento al pasto', async ({ page, request }) => {
+    await createIngredient(request, token, { name: 'Frutta', defaultUnit: 'gr', defaultQty: 100 });
+
+    await page.reload();
+    await expect(page.locator('.meal-section').first()).toBeVisible({ timeout: 8000 });
+
+    await page.locator('.meal-section').first().locator('.add-btn').click();
+    await expect(page.locator('ion-modal')).toBeVisible({ timeout: 5000 });
+
+    await page.locator('ion-modal .ing-row').first().click();
+    await expect(page.locator('ion-modal .qty-step')).toBeVisible({ timeout: 3000 });
+    await page.locator('ion-modal .confirm-btn').click();
+
+    // Success toast should appear
+    await expect(page.locator('ion-toast')).toBeVisible({ timeout: 5000 });
   });
 
   test('rimuove alimento dal pasto', async ({ page, request }) => {
@@ -96,15 +137,17 @@ test.describe('Menù Settimanale', () => {
     await expect(page.locator('.item-name').filter({ hasText: 'Avena' })).toBeVisible({ timeout: 8000 });
   });
 
-  test('day selector scrollabile su viewport stretto (360px)', async ({ page }) => {
+  test('day pills riempiono tutta la larghezza su viewport stretto (360px)', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 }); // Samsung S8+
     await expect(page.locator('.day-pill')).toHaveCount(7, { timeout: 8000 });
-    // All 7 pills exist; the bar should be scrollable (overflow-x: auto)
+
+    // All pills visible without horizontal scroll (flex:1 distributes evenly)
     const bar = page.locator('.day-selector-bar');
     await expect(bar).toBeVisible();
-    // The last pill should be reachable by scrolling
-    await page.locator('.day-pill').last().scrollIntoViewIfNeeded();
-    await page.locator('.day-pill').last().click();
+
+    const lastPill = page.locator('.day-pill').last();
+    await expect(lastPill).toBeVisible();
+    await lastPill.click();
     await expect(page.locator('.day-title')).toContainText('Domenica');
   });
 });

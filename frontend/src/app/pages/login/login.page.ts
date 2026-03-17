@@ -7,7 +7,7 @@ import {
   IonContent, IonButton, IonInput, IonIcon, IonText, IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { mailOutline, lockClosedOutline, leafOutline } from 'ionicons/icons';
+import { mailOutline, lockClosedOutline, leafOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -98,6 +98,7 @@ import { AuthService } from '../../core/services/auth.service';
       --padding-end: 0;
       --background: transparent;
       --color: #1a1a1a;
+      flex: 1;
     }
     .btn-primary {
       --background: #2E7D32;
@@ -149,8 +150,11 @@ import { AuthService } from '../../core/services/auth.service';
             <label>Password</label>
             <div class="input-wrapper">
               <ion-icon name="lock-closed-outline"></ion-icon>
-              <ion-input type="password" placeholder="••••••••"
+              <ion-input [type]="showPassword ? 'text' : 'password'" placeholder="••••••••"
                 [(ngModel)]="password" (keyup.enter)="login()"></ion-input>
+              <ion-button fill="clear" size="small" style="--color:#aaa; --padding-start:0; --padding-end:0; height:36px; flex-shrink:0;" (click)="showPassword = !showPassword">
+                <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" slot="icon-only" style="font-size:18px;"></ion-icon>
+              </ion-button>
             </div>
           </div>
 
@@ -171,8 +175,9 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class LoginPage {
   email = ''; password = ''; error = ''; loading = false;
+  showPassword = false;
   constructor(private auth: AuthService, private router: Router) {
-    addIcons({ mailOutline, lockClosedOutline, leafOutline });
+    addIcons({ mailOutline, lockClosedOutline, leafOutline, eyeOutline, eyeOffOutline });
   }
   login() {
     this.error = '';

@@ -7,7 +7,7 @@ import {
   IonContent, IonButton, IonInput, IonIcon, IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { mailOutline, lockClosedOutline, leafOutline } from 'ionicons/icons';
+import { mailOutline, lockClosedOutline, leafOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -30,7 +30,7 @@ import { AuthService } from '../../core/services/auth.service';
     .input-wrapper { display:flex; align-items:center; background:#F5F5F5; border-radius:10px; border:2px solid transparent; padding:0 12px; transition:border-color 0.2s; }
     .input-wrapper:focus-within { border-color:#2E7D32; background:#fff; }
     .input-wrapper ion-icon { color:#aaa; font-size:18px; flex-shrink:0; }
-    .input-wrapper ion-input { --padding-start:8px; --background:transparent; --color:#1a1a1a; }
+    .input-wrapper ion-input { --padding-start:8px; --padding-end:0; --background:transparent; --color:#1a1a1a; flex:1; }
     .btn-primary { --background:#2E7D32; --background-activated:#1B5E20; --border-radius:10px; --box-shadow:0 4px 12px rgba(46,125,50,0.4); height:52px; font-weight:700; font-size:1rem; margin:24px 0 0; }
     .link-btn { --color:#2E7D32; font-size:0.875rem; margin-top:8px; }
     .hint { font-size:0.75rem; color:#aaa; margin-top:4px; padding-left:2px; }
@@ -62,8 +62,11 @@ import { AuthService } from '../../core/services/auth.service';
             <label>Password</label>
             <div class="input-wrapper">
               <ion-icon name="lock-closed-outline"></ion-icon>
-              <ion-input type="password" placeholder="min. 8 caratteri"
+              <ion-input [type]="showPassword ? 'text' : 'password'" placeholder="min. 8 caratteri"
                 [(ngModel)]="password" (keyup.enter)="register()"></ion-input>
+              <ion-button fill="clear" size="small" style="--color:#aaa; --padding-start:0; --padding-end:0; height:36px; flex-shrink:0;" (click)="showPassword = !showPassword">
+                <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" slot="icon-only" style="font-size:18px;"></ion-icon>
+              </ion-button>
             </div>
           </div>
           <div style="padding: 6px 16px 12px; font-size: 0.75rem; display: flex; flex-direction: column; gap: 3px;">
@@ -77,7 +80,7 @@ import { AuthService } from '../../core/services/auth.service';
               {{ passwordRules.number ? '✓' : '○' }} Un numero
             </span>
             <span [style.color]="passwordRules.special ? '#2E7D32' : '#999'">
-              {{ passwordRules.special ? '✓' : '○' }} Un carattere speciale (!@#$...)
+              {{ passwordRules.special ? '✓' : '○' }} Un carattere speciale (!#$...)
             </span>
           </div>
 
@@ -98,6 +101,7 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class RegisterPage {
   email = ''; password = ''; error = ''; loading = false;
+  showPassword = false;
 
   get passwordRules() {
     const p = this.password || '';
@@ -110,7 +114,7 @@ export class RegisterPage {
   }
 
   constructor(private auth: AuthService, private router: Router) {
-    addIcons({ mailOutline, lockClosedOutline, leafOutline });
+    addIcons({ mailOutline, lockClosedOutline, leafOutline, eyeOutline, eyeOffOutline });
   }
   register() {
     this.error = '';

@@ -349,9 +349,14 @@ const STATUS_IT: Record<string, string> = {
               <div class="collab-info">
                 <div class="collab-email">{{ c.email }}</div>
               </div>
-              <ion-button fill="outline" color="primary" size="small" (click)="viewMenu(c)" style="--border-radius: 8px; height: 34px; font-size: 0.78rem; font-weight: 700;">
-                Vedi menù
-              </ion-button>
+              <div style="display: flex; gap: 4px; flex-shrink: 0;">
+                <ion-button fill="outline" color="primary" size="small" (click)="viewMenu(c)" style="--border-radius: 8px; height: 34px; font-size: 0.78rem; font-weight: 700;">
+                  Vedi menù
+                </ion-button>
+                <ion-button fill="clear" color="danger" size="small" (click)="disconnect(c)">
+                  <ion-icon name="person-remove-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+              </div>
             </div>
           </div>
 
@@ -513,6 +518,31 @@ export class CollaborationPage implements OnInit {
     const parts = email.split('@')[0].split(/[._\-]/);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return email.substring(0, 2).toUpperCase();
+  }
+
+  async disconnect(c: Collaborator) {
+    const alert = await this.alertCtrl.create({
+      header: 'Rimuovi collaboratore',
+      message: `Rimuovere ${c.email} dai collaboratori? La lista della spesa non sarà più condivisa.`,
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Rimuovi', role: 'destructive',
+          handler: () => {
+            this.collaborationService.disconnect(c.id).subscribe({
+              next: () => {
+                this.collaborators = this.collaborators.filter(x => x.id !== c.id);
+                this.showToast('Collaboratore rimosso', 'medium');
+              },
+              error: async (e) => {
+                await this.showToast(e.error?.message || 'Errore rimuovendo collaboratore', 'danger');
+              }
+            });
+          }
+        }
+      ]
+    });
+    await alert.present();
   }
 
   async viewMenu(c: Collaborator) {

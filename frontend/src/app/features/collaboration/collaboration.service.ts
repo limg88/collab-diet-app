@@ -13,4 +13,5 @@ export class CollaborationService {
   reject(id: string) { return this.api.patch(`/collaboration/invites/${id}/reject`, {}); }
   revoke(id: string) { return this.api.patch(`/collaboration/invites/${id}/revoke`, {}); }
   getCollaborators() { return this.api.get<Collaborator[]>('/collaboration/collaborators'); }
+  disconnect(collaboratorId: string) { return this.api.delete(`/collaboration/collaborators/${collaboratorId}`); }
 }

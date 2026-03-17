@@ -5,7 +5,7 @@ import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
   IonList, IonItem, IonLabel, IonIcon, IonChip, IonBadge,
   IonSkeletonText, IonNote,
-  ModalController, ToastController
+  ModalController, ToastController, AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { add, trashOutline, logOutOutline, sunny, restaurant, cafe, iceCream, moon, fastFood } from 'ionicons/icons';
@@ -229,7 +229,19 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
           <span *ngIf="selectedDay.isToday" style="font-size:0.75rem; background: rgba(245,124,0,0.12); color:#F57C00; border-radius:6px; padding:2px 8px; margin-left:8px; font-weight:600;">Oggi</span>
         </div>
 
-        <div *ngFor="let meal of selectedDay.meals" class="meal-section">
+        <div style="display: flex; justify-content: flex-end; padding: 0 16px 8px; gap: 8px; align-items: center;">
+          <span style="font-size: 0.75rem; color: var(--ion-color-medium);">
+            {{ visibleMealsCount }} / 6 pasti
+          </span>
+          <ion-chip
+            style="--background: rgba(46,125,50,0.1); --color: var(--ion-color-primary); height: 26px; font-size: 0.72rem; font-weight: 700; margin: 0;"
+            (click)="hideEmptyMeals = !hideEmptyMeals">
+            {{ hideEmptyMeals ? 'Mostra tutti' : 'Compatta' }}
+          </ion-chip>
+        </div>
+
+        <ng-container *ngFor="let meal of selectedDay.meals">
+          <div class="meal-section" *ngIf="!hideEmptyMeals || meal.items.length > 0">
           <div class="meal-header">
             <div class="meal-icon-wrap" [style.background]="meal.color">
               <ion-icon [name]="meal.icon"></ion-icon>
@@ -259,7 +271,8 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
           </ion-list>
 
           <p class="meal-empty" *ngIf="meal.items.length === 0">Nessun alimento pianificato</p>
-        </div>
+          </div>
+        </ng-container>
       </ng-container>
     </ion-content>
   `
@@ -269,6 +282,7 @@ export class MenuPage implements OnInit {
   selectedDow = 1;
   loading = true;
   addingItem = false;
+  hideEmptyMeals = true;
   ingredients: Ingredient[] = [];
   private menu: WeeklyMenu | null = null;
   private weekStartDate = new Date();
@@ -277,12 +291,17 @@ export class MenuPage implements OnInit {
     return this.days.find(d => d.dayOfWeek === this.selectedDow);
   }
 
+  get visibleMealsCount(): number {
+    return this.selectedDay?.meals.filter(m => m.items.length > 0).length ?? 0;
+  }
+
   constructor(
     private menuService: MenuService,
     private ingredientsService: IngredientsService,
     private authService: AuthService,
     private modalCtrl: ModalController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private alertCtrl: AlertController
   ) {
     addIcons({ add, trashOutline, logOutOutline, sunny, restaurant, cafe, iceCream, moon, fastFood });
   }
@@ -417,7 +436,7 @@ export class MenuPage implements OnInit {
         const day = this.days.find(d => d.dayOfWeek === dayOfWeek);
         const meal = day?.meals.find(m => m.mealType === mealType);
         if (meal) meal.items = [...meal.items, enriched];
-        this.showToast('✅ Aggiunto al pasto', 'success');
+        this.showToast('✅ Aggiunto: ' + (this.ingredients.find(i => i.id === ingredientId)?.name ?? ''), 'success');
       },
       error: async (e) => {
         this.addingItem = false;
@@ -426,17 +445,31 @@ export class MenuPage implements OnInit {
     });
   }
 
-  removeItem(itemId: string) {
-    this.menuService.removeItem(itemId).subscribe({
-      next: () => {
-        for (const day of this.days)
-          for (const meal of day.meals) {
-            const idx = meal.items.findIndex(i => i.id === itemId);
-            if (idx !== -1) { meal.items = meal.items.filter(i => i.id !== itemId); return; }
+  async removeItem(itemId: string) {
+    const alert = await this.alertCtrl.create({
+      header: 'Rimuovi alimento',
+      message: 'Rimuovere questo alimento dal pasto?',
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Rimuovi',
+          role: 'destructive',
+          handler: () => {
+            this.menuService.removeItem(itemId).subscribe({
+              next: () => {
+                for (const day of this.days)
+                  for (const meal of day.meals) {
+                    const idx = meal.items.findIndex(i => i.id === itemId);
+                    if (idx !== -1) { meal.items = meal.items.filter(i => i.id !== itemId); return; }
+                  }
+              },
+              error: async (e) => { await this.showToast(e.error?.message || 'Errore', 'danger'); }
+            });
           }
-      },
-      error: async (e) => { await this.showToast(e.error?.message || 'Errore', 'danger'); }
+        }
+      ]
     });
+    await alert.present();
   }
 
   logout() { this.authService.logout(); }

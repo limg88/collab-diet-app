@@ -117,6 +117,22 @@ export class CollaborationService {
     return collaborators;
   }
 
+  async disconnectCollaborator(userId: string, collaboratorId: string): Promise<void> {
+    const invite = await this.inviteRepo.findOne({
+      where: [
+        { senderId: userId, receiverId: collaboratorId, status: InviteStatusEnum.ACCEPTED },
+        { senderId: collaboratorId, receiverId: userId, status: InviteStatusEnum.ACCEPTED },
+      ],
+    });
+
+    if (!invite) {
+      throw new NotFoundException('Active collaboration not found');
+    }
+
+    invite.status = InviteStatusEnum.REVOKED;
+    await this.inviteRepo.save(invite);
+  }
+
   private async findOrFail(inviteId: string): Promise<CollaborationInvite> {
     const invite = await this.inviteRepo.findOne({ where: { id: inviteId } });
     if (!invite) throw new NotFoundException(`Invite ${inviteId} not found`);

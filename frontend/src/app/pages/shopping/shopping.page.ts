@@ -142,6 +142,17 @@ import { Unit } from '../../features/ingredients/ingredients.service';
           style="--background: white; --border-radius: 10px; --box-shadow: var(--app-shadow);"
           (ionInput)="searchQuery = $event.detail.value ?? ''">
         </ion-searchbar>
+        <ion-buttons slot="end" style="padding-right: 8px; padding-bottom: 8px;">
+          <ion-button
+            fill="solid"
+            size="small"
+            [color]="hidePurchased ? 'primary' : 'light'"
+            style="--border-radius: 8px; font-size: 0.72rem; font-weight: 700; height: 30px;"
+            (click)="hidePurchased = !hidePurchased">
+            <ion-icon name="checkmark-circle" slot="start" style="font-size: 14px;"></ion-icon>
+            {{ hidePurchased ? 'Mostra tutti' : 'Nascondi acquistati' }}
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -312,8 +323,14 @@ export class ShoppingPage implements OnInit {
     return this.allItems.filter(i => i.name.toLowerCase().includes(q));
   }
 
-  get menuItems() { return this.filteredItems.filter(i => i.source === 'MENU'); }
-  get extraItems() { return this.filteredItems.filter(i => i.source === 'FUORI_MENU'); }
+  hidePurchased = false;
+
+  get menuItems() {
+    return this.filteredItems.filter(i => i.source === 'MENU' && (!this.hidePurchased || !i.isPurchased));
+  }
+  get extraItems() {
+    return this.filteredItems.filter(i => i.source === 'FUORI_MENU' && (!this.hidePurchased || !i.isPurchased));
+  }
   get purchasedCount() { return this.allItems.filter(i => i.isPurchased).length; }
 
   constructor(

@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -45,5 +46,10 @@ export class CollaborationController {
   @Get('collaborators')
   getCollaborators(@Request() req) {
     return this.collaborationService.getActiveCollaborators(req.user.id);
+  }
+
+  @Delete('collaborators/:collaboratorId')
+  disconnectCollaborator(@Request() req, @Param('collaboratorId') collaboratorId: string) {
+    return this.collaborationService.disconnectCollaborator(req.user.id, collaboratorId);
   }
 }

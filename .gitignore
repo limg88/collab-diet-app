@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+www/
+frontend/www/
+backend/dist/
+**/dist/
+**/out-tsc/
+
+# Android
+frontend/android/
+
+# Electron
+frontend/out/
+
+# Environment
+.env
+**/.env
+!**/.env.example
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Coverage
+coverage/

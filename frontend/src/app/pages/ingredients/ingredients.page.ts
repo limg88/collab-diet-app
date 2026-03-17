@@ -216,6 +216,18 @@ export class IngredientsPage implements OnInit {
 
   ngOnInit() { this.loadIngredients(); }
 
+  ionViewWillEnter() {
+    if (!this.loading) {
+      this.ingredientsService.list().subscribe({
+        next: (list) => {
+          this.ingredients = list.filter(i => !i.isDeleted);
+          this.filterIngredients();
+        },
+        error: () => {}
+      });
+    }
+  }
+
   getUnitColor(unit: Unit | string): string { return (UNIT_COLORS as Record<string, string>)[unit] || '#757575'; }
 
   get existingCategories(): string[] {

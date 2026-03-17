@@ -294,6 +294,12 @@ export class MenuPage implements OnInit {
     this.loadData();
   }
 
+  ionViewWillEnter() {
+    if (!this.loading) {
+      Promise.all([this.loadMenu(), this.loadIngredients()]);
+    }
+  }
+
   private initWeekStart() {
     const now = new Date();
     const dow = now.getDay();

@@ -415,6 +415,12 @@ export class CollaborationPage implements OnInit {
     this.loadAll();
   }
 
+  ionViewWillEnter() {
+    if (!this.loading) {
+      Promise.all([this.loadCollaborators(), this.loadInvites()]);
+    }
+  }
+
   async loadAll() {
     this.loading = true;
     try {

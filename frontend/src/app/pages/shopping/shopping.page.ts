@@ -298,6 +298,15 @@ export class ShoppingPage implements OnInit {
 
   ngOnInit() { this.loadList(); }
 
+  ionViewWillEnter() {
+    if (!this.loading) {
+      this.shoppingService.getList().subscribe({
+        next: (items) => { this.allItems = items; },
+        error: () => {}
+      });
+    }
+  }
+
   async loadList() {
     this.loading = true;
     this.shoppingService.getList().subscribe({

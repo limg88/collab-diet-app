@@ -69,6 +69,41 @@ test.describe('Lista della Spesa', () => {
     await expect(page.locator('.section-label').filter({ hasText: 'Extra' })).toBeVisible();
   });
 
+  test('articoli con contributo del collaboratore mostrano indicatore visivo', async ({ page, request }) => {
+    const API_BASE = 'http://localhost:3000/api/v1';
+
+    // Register a second user (collaborator)
+    const collabEmail = `collab-${Date.now()}@test.com`;
+    const collabToken = await registerUser(request, { email: collabEmail, password: PASSWORD });
+
+    // User A invites User B
+    const inviteRes = await request.post(`${API_BASE}/collaboration/invite`, {
+      data: { email: collabEmail },
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    // User B accepts
+    const invitesRes = await request.get(`${API_BASE}/collaboration/invites`, {
+      headers: { Authorization: `Bearer ${collabToken}` }
+    });
+    const { received } = await invitesRes.json();
+    await request.patch(`${API_BASE}/collaboration/invites/${received[0].id}/accept`, {
+      headers: { Authorization: `Bearer ${collabToken}` }
+    });
+
+    // User B adds an ingredient and adds it to their menu
+    const collabIng = await createIngredient(request, collabToken, { name: 'Broccoli', defaultUnit: 'gr', defaultQty: 200 });
+    await addMenuItemApi(request, collabToken, { dayOfWeek: 1, mealType: 'LUNCH', ingredientId: collabIng.id });
+
+    // User A loads shopping list — should show Broccoli with collaborator indicator
+    await page.reload();
+    await expect(page.locator('.item-name').filter({ hasText: 'Broccoli' })).toBeVisible({ timeout: 8000 });
+
+    // Collaborator indicator (people icon) should be visible for that item
+    const collabItem = page.locator('.shop-item').filter({ hasText: 'Broccoli' });
+    await expect(collabItem.locator('ion-icon[name="people-outline"]')).toBeVisible({ timeout: 5000 });
+  });
+
   test('scorta disponibile per articoli extra', async ({ page, request }) => {
     const API_BASE = 'http://localhost:3000/api/v1';
     await request.post(`${API_BASE}/shopping/extras`, {

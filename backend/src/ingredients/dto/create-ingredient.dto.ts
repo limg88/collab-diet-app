@@ -5,6 +5,7 @@ import {
   IsEnum,
   IsNumber,
   Min,
+  Max,
   IsArray,
   ArrayUnique,
 } from 'class-validator';
@@ -24,6 +25,7 @@ export class CreateIngredientDto {
 
   @IsNumber()
   @Min(0)
+  @Max(99999)
   defaultQty: number;
 
   @IsOptional()

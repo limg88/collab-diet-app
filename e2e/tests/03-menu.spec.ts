@@ -72,6 +72,29 @@ test.describe('Menù Settimanale', () => {
     await expect(page.locator('.item-qty').filter({ hasText: '150' })).toBeVisible({ timeout: 5000 });
   });
 
+  test('quantità > 99999 viene bloccata prima del salvataggio', async ({ page, request }) => {
+    await createIngredient(request, token, { name: 'TestOverflow', defaultUnit: 'gr', defaultQty: 100 });
+
+    await page.reload();
+    await expect(page.locator('.meal-section').first()).toBeVisible({ timeout: 8000 });
+
+    await page.locator('.meal-section').first().locator('.add-btn').click();
+    await expect(page.locator('ion-modal')).toBeVisible({ timeout: 5000 });
+
+    await page.locator('ion-modal .ing-row').filter({ hasText: 'TestOverflow' }).click();
+    await expect(page.locator('ion-modal .qty-step')).toBeVisible({ timeout: 3000 });
+
+    // Enter an oversized value
+    const qtyInput = page.locator('ion-modal .qty-main-input');
+    await qtyInput.clear();
+    await qtyInput.fill('234234234');
+    await page.locator('ion-modal .confirm-btn').click();
+
+    // Value should be capped to 99999 — item appears with quantity 99999 (not the overflow value)
+    await expect(page.locator('ion-modal')).not.toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.item-qty').filter({ hasText: '99999' })).toBeVisible({ timeout: 5000 });
+  });
+
   test('feedback toast dopo aggiunta alimento al pasto', async ({ page, request }) => {
     await createIngredient(request, token, { name: 'Frutta', defaultUnit: 'gr', defaultQty: 100 });
 

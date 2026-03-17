@@ -54,6 +54,9 @@ export class ShoppingItem {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   stockQty: number;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  collaboratorStockQty: number;
+
   @Column({ nullable: true, type: 'varchar' })
   mealType: string | null;
 

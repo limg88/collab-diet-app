@@ -101,7 +101,7 @@ import { Ingredient, MealType } from '../../features/ingredients/ingredients.ser
         <div>
           <p class="qty-label">Quantità</p>
           <div class="qty-input-wrap">
-            <ion-input type="number" [(ngModel)]="selectedQty" min="0.1" step="any" inputmode="decimal" class="qty-main-input"></ion-input>
+            <ion-input type="number" [(ngModel)]="selectedQty" min="0.1" step="any" max="99999" inputmode="decimal" class="qty-main-input"></ion-input>
             <span class="qty-unit-label">{{ selectedIngredient.defaultUnit }}</span>
           </div>
         </div>
@@ -161,7 +161,13 @@ export class IngredientPickerComponent implements OnInit {
 
   confirm() {
     if (!this.selectedIngredient) return;
-    this.modalCtrl.dismiss({ ingredient: this.selectedIngredient, quantity: this.selectedQty }, 'selected');
+    const qty = Number(this.selectedQty);
+    if (isNaN(qty) || qty <= 0) return;
+    const capped = Math.min(qty, 99999);
+    this.modalCtrl.dismiss(
+      { ingredient: this.selectedIngredient, quantity: capped },
+      'selected'
+    );
   }
 
   dismiss() {

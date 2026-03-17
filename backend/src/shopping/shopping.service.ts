@@ -102,6 +102,21 @@ export class ShoppingService {
       }
     }
 
+    // Compute collaborator stock for each aggregated item
+    const collaboratorStockMap = new Map<string, number>();
+    for (const collab of collaborators) {
+      const collabShoppingItems = await this.shoppingItemRepo.find({
+        where: { userId: collab.id, weekStart, source: ShoppingSourceEnum.MENU },
+      });
+      for (const ci of collabShoppingItems) {
+        const stockVal = Number(ci.stockQty);
+        if (stockVal > 0) {
+          const key = `${ci.name.toLowerCase()}::${ci.unit}`;
+          collaboratorStockMap.set(key, (collaboratorStockMap.get(key) ?? 0) + stockVal);
+        }
+      }
+    }
+
     // Persist aggregated MENU items, restoring preserved user values
     const toSave: Partial<ShoppingItem>[] = [];
     for (const agg of aggregationMap.values()) {
@@ -116,8 +131,9 @@ export class ShoppingService {
         unit: agg.unit as any,
         totalQty: agg.totalQty,
         stockQty: prev?.stockQty ?? 0,
+        collaboratorStockQty: collaboratorStockMap.get(key) ?? 0,
         isPurchased: prev?.isPurchased ?? false,
-        collaboratorBreakdown: agg.breakdown.length > 1 ? agg.breakdown : null,
+        collaboratorBreakdown: agg.breakdown.length > 0 ? agg.breakdown : null,
       });
     }
 

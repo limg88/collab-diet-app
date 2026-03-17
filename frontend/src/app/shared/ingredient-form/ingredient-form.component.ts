@@ -162,7 +162,8 @@ const ALL_MEAL_TYPES: MealType[] = ['BREAKFAST','MORNING_SNACK','LUNCH','AFTERNO
               [(ngModel)]="form.defaultQty"
               placeholder="es. 100"
               min="0.1"
-              step="any">
+              step="any"
+              max="99999">
             </ion-input>
           </ion-item>
         </ion-list>
@@ -252,6 +253,7 @@ export class IngredientFormComponent implements OnInit {
     if (!this.form.name?.trim()) { this.error = 'Il nome è obbligatorio'; return; }
     const qty = Number(this.form.defaultQty);
     if (isNaN(qty) || qty <= 0) { this.error = 'La quantità deve essere > 0'; return; }
+    if (qty > 99999) { this.error = 'La quantità massima è 99.999'; return; }
 
     const result: Partial<Ingredient> = {
       name: this.form.name.trim(),

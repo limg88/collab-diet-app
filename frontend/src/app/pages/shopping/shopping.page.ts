@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
   IonList, IonItem, IonLabel, IonIcon, IonFab, IonFabButton,
-  IonCheckbox, IonInput, IonProgressBar, IonBadge, IonSkeletonText,
+  IonCheckbox, IonInput, IonProgressBar, IonBadge, IonSkeletonText, IonNote,
   AlertController, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { add, trashOutline, refreshOutline, cartOutline, checkmarkCircle, storefrontOutline } from 'ionicons/icons';
+import { add, trashOutline, refreshOutline, cartOutline, checkmarkCircle, storefrontOutline, peopleOutline } from 'ionicons/icons';
 import { ShoppingService, ShoppingItem } from '../../features/shopping/shopping.service';
 import { Unit } from '../../features/ingredients/ingredients.service';
 
@@ -19,7 +19,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
     CommonModule, FormsModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
     IonList, IonItem, IonLabel, IonIcon, IonFab, IonFabButton,
-    IonCheckbox, IonInput, IonProgressBar, IonBadge, IonSkeletonText
+    IonCheckbox, IonInput, IonProgressBar, IonBadge, IonSkeletonText, IonNote
   ],
   styles: [`
     .progress-card {
@@ -185,6 +185,27 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                       tot. {{ item.totalQty }}
                     </span>
                   </div>
+                  <!-- Collaborator breakdown -->
+                  <div class="collab-info" *ngIf="hasCollaboratorData(item)" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; align-items: center;">
+                    <ion-icon name="people-outline" style="font-size: 12px; color: #F57C00; flex-shrink: 0;"></ion-icon>
+                    <span *ngFor="let c of item.collaboratorBreakdown" style="font-size: 0.72rem; color: #666; background: rgba(245,124,0,0.08); border-radius: 4px; padding: 1px 6px;">
+                      {{ c.email.split('@')[0] }}: {{ c.qty }}{{ item.unit }}
+                    </span>
+                  </div>
+                  <!-- Collaborator stock import -->
+                  <div *ngIf="item.collaboratorStockQty > 0" style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                    <span style="font-size: 0.72rem; color: #7B1FA2; background: rgba(123,31,162,0.08); border-radius: 4px; padding: 1px 6px;">
+                      📦 scorta collab: {{ item.collaboratorStockQty }}{{ item.unit }}
+                    </span>
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      style="--color: #7B1FA2; --padding-start: 4px; --padding-end: 4px; height: 22px; font-size: 0.68rem;"
+                      [disabled]="importingStock.has(item.id)"
+                      (click)="importCollaboratorStock(item)">
+                      Importa
+                    </ion-button>
+                  </div>
                 </ion-label>
                 <div slot="end" class="stock-area">
                   <span class="stock-label">Scorta</span>
@@ -261,6 +282,7 @@ export class ShoppingPage implements OnInit {
   allItems: ShoppingItem[] = [];
   loading = true;
   updatingItem: Set<string> = new Set();
+  importingStock: Set<string> = new Set();
 
   get menuItems() { return this.allItems.filter(i => i.source === 'MENU'); }
   get extraItems() { return this.allItems.filter(i => i.source === 'FUORI_MENU'); }
@@ -271,7 +293,7 @@ export class ShoppingPage implements OnInit {
     private alertCtrl: AlertController,
     private toastCtrl: ToastController
   ) {
-    addIcons({ add, trashOutline, refreshOutline, cartOutline, checkmarkCircle, storefrontOutline });
+    addIcons({ add, trashOutline, refreshOutline, cartOutline, checkmarkCircle, storefrontOutline, peopleOutline });
   }
 
   ngOnInit() { this.loadList(); }
@@ -285,6 +307,10 @@ export class ShoppingPage implements OnInit {
   }
 
   getQtyToBuy(item: ShoppingItem): number { return Math.max(0, item.totalQty - item.stockQty); }
+
+  hasCollaboratorData(item: ShoppingItem): boolean {
+    return !!(item.collaboratorBreakdown?.length);
+  }
 
   togglePurchased(item: ShoppingItem) {
     this.updatingItem = new Set([...this.updatingItem, item.id]);
@@ -311,6 +337,23 @@ export class ShoppingPage implements OnInit {
       },
       error: async (e) => {
         this.updatingItem = new Set([...this.updatingItem].filter(id => id !== item.id));
+        await this.showToast(e.error?.message || 'Errore', 'danger');
+      }
+    });
+  }
+
+  importCollaboratorStock(item: ShoppingItem) {
+    if (!item.collaboratorStockQty || item.collaboratorStockQty <= 0) return;
+    const newStock = Number(item.stockQty) + Number(item.collaboratorStockQty);
+    this.importingStock = new Set([...this.importingStock, item.id]);
+    this.shoppingService.updateItem(item.id, { stockQty: newStock }).subscribe({
+      next: (res) => {
+        this.importingStock = new Set([...this.importingStock].filter(id => id !== item.id));
+        this.allItems = this.allItems.map(i => i.id === item.id ? { ...i, stockQty: res.stockQty } : i);
+        this.showToast('Scorta collaboratore importata', 'success');
+      },
+      error: async (e) => {
+        this.importingStock = new Set([...this.importingStock].filter(id => id !== item.id));
         await this.showToast(e.error?.message || 'Errore', 'danger');
       }
     });

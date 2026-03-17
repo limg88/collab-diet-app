@@ -5,7 +5,8 @@ import { Unit } from '../ingredients/ingredients.service';
 export interface CollaboratorBreakdown { userId: string; email: string; qty: number; }
 export interface ShoppingItem {
   id: string; name: string; category?: string; unit: Unit;
-  totalQty: number; stockQty: number; isPurchased: boolean;
+  totalQty: number; stockQty: number; collaboratorStockQty: number;
+  isPurchased: boolean;
   source: 'MENU' | 'FUORI_MENU'; mealType?: string;
   collaboratorBreakdown?: CollaboratorBreakdown[];
 }

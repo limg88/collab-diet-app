@@ -16,6 +16,7 @@ export class AddMealItemDto {
   @IsOptional()
   @IsNumber()
   @Min(0.01)
+  @Max(99999)
   quantity?: number;
 
   @IsOptional()

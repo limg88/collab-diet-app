@@ -247,6 +247,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
 export class ShoppingPage implements OnInit {
   allItems: ShoppingItem[] = [];
   loading = true;
+  updatingItem: Set<string> = new Set();
 
   get menuItems() { return this.allItems.filter(i => i.source === 'MENU'); }
   get extraItems() { return this.allItems.filter(i => i.source === 'FUORI_MENU'); }
@@ -273,18 +274,32 @@ export class ShoppingPage implements OnInit {
   getQtyToBuy(item: ShoppingItem): number { return Math.max(0, item.totalQty - item.stockQty); }
 
   togglePurchased(item: ShoppingItem) {
+    this.updatingItem = new Set([...this.updatingItem, item.id]);
     this.shoppingService.updateItem(item.id, { isPurchased: !item.isPurchased }).subscribe({
-      next: (res) => { this.allItems = this.allItems.map(i => i.id === item.id ? { ...i, isPurchased: res.isPurchased } : i); },
-      error: async (e) => { await this.showToast(e.error?.message || 'Errore', 'danger'); }
+      next: (res) => {
+        this.updatingItem = new Set([...this.updatingItem].filter(id => id !== item.id));
+        this.allItems = this.allItems.map(i => i.id === item.id ? { ...i, isPurchased: res.isPurchased } : i);
+      },
+      error: async (e) => {
+        this.updatingItem = new Set([...this.updatingItem].filter(id => id !== item.id));
+        await this.showToast(e.error?.message || 'Errore', 'danger');
+      }
     });
   }
 
   updateStock(item: ShoppingItem, event: Event) {
     const val = parseFloat((event as CustomEvent<{ value: string }>).detail.value);
     if (isNaN(val) || val < 0) return;
+    this.updatingItem = new Set([...this.updatingItem, item.id]);
     this.shoppingService.updateItem(item.id, { stockQty: val }).subscribe({
-      next: (res) => { this.allItems = this.allItems.map(i => i.id === item.id ? { ...i, stockQty: res.stockQty } : i); },
-      error: async (e) => { await this.showToast(e.error?.message || 'Errore', 'danger'); }
+      next: (res) => {
+        this.updatingItem = new Set([...this.updatingItem].filter(id => id !== item.id));
+        this.allItems = this.allItems.map(i => i.id === item.id ? { ...i, stockQty: res.stockQty } : i);
+      },
+      error: async (e) => {
+        this.updatingItem = new Set([...this.updatingItem].filter(id => id !== item.id));
+        await this.showToast(e.error?.message || 'Errore', 'danger');
+      }
     });
   }
 

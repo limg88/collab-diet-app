@@ -2,7 +2,14 @@ import { Injectable } from '@angular/core';
 import { ApiService } from '../../core/services/api.service';
 import { MealType, Unit } from '../ingredients/ingredients.service';
 
-export interface MealItem { id: string; ingredientId: string; ingredientName: string; quantity: number; unit: Unit; }
+export interface MealItem {
+  id: string;
+  ingredientId: string;
+  ingredientName?: string;    // legacy — may be absent
+  ingredient?: { id: string; name: string; defaultUnit: string; defaultQty: number };
+  quantity: number;
+  unit: Unit;
+}
 export interface Meal { id: string; mealType: MealType; items: MealItem[]; }
 export interface MenuDay { id: string; dayOfWeek: number; meals: Meal[]; }
 export interface WeeklyMenu { id: string; weekStart: string; days: MenuDay[]; }

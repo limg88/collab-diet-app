@@ -79,4 +79,32 @@ test.describe('Menù Settimanale', () => {
     // Should show a toast (no alert) warning about missing ingredients
     await expect(page.locator('ion-toast')).toBeVisible({ timeout: 5000 });
   });
+
+  test('nome ingrediente visibile dopo aggiunta', async ({ page, request }) => {
+    const ing = await createIngredient(request, token, { name: 'Avena', defaultUnit: 'gr', defaultQty: 80 });
+    await import('./helpers/api').then(m => m.addMenuItemApi(request, token, {
+      dayOfWeek: 1, mealType: 'BREAKFAST', ingredientId: ing.id
+    }));
+
+    await page.reload();
+    await expect(page.locator('.day-pill').first()).toBeVisible({ timeout: 8000 });
+
+    // Navigate to Monday (day 1)
+    await page.locator('.day-pill').first().click();
+
+    // Ingredient name should be visible in the meal item
+    await expect(page.locator('.item-name').filter({ hasText: 'Avena' })).toBeVisible({ timeout: 8000 });
+  });
+
+  test('day selector scrollabile su viewport stretto (360px)', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 }); // Samsung S8+
+    await expect(page.locator('.day-pill')).toHaveCount(7, { timeout: 8000 });
+    // All 7 pills exist; the bar should be scrollable (overflow-x: auto)
+    const bar = page.locator('.day-selector-bar');
+    await expect(bar).toBeVisible();
+    // The last pill should be reachable by scrolling
+    await page.locator('.day-pill').last().scrollIntoViewIfNeeded();
+    await page.locator('.day-pill').last().click();
+    await expect(page.locator('.day-title')).toContainText('Domenica');
+  });
 });

@@ -9,6 +9,7 @@ frontend/www/
 backend/dist/
 **/dist/
 **/out-tsc/
+/.angular/cache
 
 # Android
 frontend/android/

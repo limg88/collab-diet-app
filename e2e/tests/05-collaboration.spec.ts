@@ -85,4 +85,35 @@ test.describe('Collaborazione', () => {
 
     await expect(page.locator('.collaborator-item')).not.toBeVisible({ timeout: 5000 });
   });
+
+  test('invito rifiutato non ricompare dopo refresh', async ({ page, request }) => {
+    const API_BASE = 'http://localhost:3000/api/v1';
+    const tokenA = await loginUser(request, { email: emailA, password: PASSWORD });
+    await request.post(`${API_BASE}/collaboration/invite`, {
+      data: { email: emailB },
+      headers: { Authorization: `Bearer ${tokenA}` }
+    });
+
+    // User B logs in and rejects
+    await loginViaUI(page, emailB, PASSWORD);
+    await page.locator('ion-tab-button[tab="collaboration"]').click();
+
+    // Find and reject the invite
+    const inviteSection = page.locator('.received-section');
+    await expect(inviteSection).toBeVisible({ timeout: 8000 });
+    await page.getByRole('button', { name: /rifiuta/i }).first().click();
+
+    // Reload page
+    await page.reload();
+    await page.locator('ion-tab-button[tab="collaboration"]').click();
+    await page.waitForTimeout(2000);
+
+    // Rejected invite should NOT appear in received pending invites
+    const receivedSection = page.locator('.received-section');
+    // Either section is gone (no pending) or doesn't contain emailA as sender
+    const isVisible = await receivedSection.isVisible();
+    if (isVisible) {
+      await expect(receivedSection).not.toContainText(emailA);
+    }
+  });
 });

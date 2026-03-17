@@ -435,7 +435,9 @@ export class CollaborationPage implements OnInit {
       this.collaborationService.getInvites().subscribe({
         next: (data) => {
           this.sentInvites = data.sent;
-          this.receivedInvites = data.received;
+          this.receivedInvites = data.received.filter((i: any) =>
+            i.status?.toLowerCase() === 'pending'
+          );
           resolve();
         },
         error: () => resolve()

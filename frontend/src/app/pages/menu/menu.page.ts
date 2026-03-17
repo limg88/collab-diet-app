@@ -5,13 +5,14 @@ import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
   IonList, IonItem, IonLabel, IonIcon, IonChip, IonBadge,
   IonSkeletonText, IonNote,
-  AlertController, ToastController
+  ModalController, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { add, trashOutline, logOutOutline, sunny, restaurant, cafe, iceCream, moon, fastFood } from 'ionicons/icons';
 import { MenuService, WeeklyMenu, MealItem } from '../../features/menu/menu.service';
 import { IngredientsService, Ingredient, MealType } from '../../features/ingredients/ingredients.service';
 import { AuthService } from '../../core/services/auth.service';
+import { IngredientPickerComponent } from '../../shared/ingredient-picker/ingredient-picker.component';
 
 const DAY_NAMES_SHORT = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 const DAY_NAMES_FULL = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
@@ -36,17 +37,21 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
     CommonModule, FormsModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
     IonList, IonItem, IonLabel, IonIcon, IonChip, IonBadge,
-    IonSkeletonText, IonNote
+    IonSkeletonText, IonNote,
+    IngredientPickerComponent
   ],
   styles: [`
     .day-selector-bar {
       background: var(--ion-color-primary);
-      padding: 8px 12px 12px;
+      padding: 6px 8px 10px;
       overflow-x: auto;
+      overflow-y: hidden;
       display: flex;
-      gap: 8px;
+      gap: 4px;
       scrollbar-width: none;
       -ms-overflow-style: none;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
     }
     .day-selector-bar::-webkit-scrollbar { display: none; }
 
@@ -54,15 +59,16 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-width: 52px;
-      padding: 8px 6px;
-      border-radius: 12px;
+      min-width: 44px;
+      flex-shrink: 0;
+      padding: 6px 4px;
+      border-radius: 10px;
       cursor: pointer;
       transition: all 0.2s;
       background: rgba(255,255,255,0.15);
       color: rgba(255,255,255,0.8);
       border: 2px solid transparent;
-      flex-shrink: 0;
+      scroll-snap-align: start;
     }
     .day-pill.selected {
       background: white;
@@ -71,13 +77,13 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
     .day-pill .day-abbr {
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
     }
     .day-pill .day-num {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
       line-height: 1.2;
     }
@@ -244,7 +250,7 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
           <ion-list class="meal-items-list" lines="inset" *ngIf="meal.items.length > 0">
             <ion-item class="meal-item-row" *ngFor="let item of meal.items">
               <ion-label>
-                <span class="item-name">{{ item.ingredientName }}</span>
+                <span class="item-name">{{ item.ingredient?.name ?? item.ingredientName ?? '—' }}</span>
                 <span class="item-qty">{{ item.quantity }} {{ item.unit }}</span>
               </ion-label>
               <ion-button slot="end" fill="clear" color="danger" size="small" (click)="removeItem(item.id)">
@@ -263,6 +269,7 @@ export class MenuPage implements OnInit {
   days: DayView[] = [];
   selectedDow = 1;
   loading = true;
+  addingItem = false;
   ingredients: Ingredient[] = [];
   private menu: WeeklyMenu | null = null;
   private weekStartDate = new Date();
@@ -275,7 +282,7 @@ export class MenuPage implements OnInit {
     private menuService: MenuService,
     private ingredientsService: IngredientsService,
     private authService: AuthService,
-    private alertCtrl: AlertController,
+    private modalCtrl: ModalController,
     private toastCtrl: ToastController
   ) {
     addIcons({ add, trashOutline, logOutOutline, sunny, restaurant, cafe, iceCream, moon, fastFood });
@@ -374,40 +381,40 @@ export class MenuPage implements OnInit {
       await toast.present();
       return;
     }
-    const inputs = this.ingredients.map(ing => ({
-      type: 'radio' as const,
-      label: `${ing.name}  (${ing.defaultQty} ${ing.defaultUnit})`,
-      value: ing.id
-    }));
-    const alert = await this.alertCtrl.create({
-      header: `Aggiungi a ${MEAL_CONFIG[mealType].label}`,
-      message: 'Seleziona un ingrediente:',
-      inputs,
-      buttons: [
-        { text: 'Annulla', role: 'cancel' },
-        {
-          text: 'Aggiungi',
-          cssClass: 'alert-confirm-btn',
-          handler: (ingredientId: string) => {
-            if (!ingredientId) return false;
-            const ing = this.ingredients.find(i => i.id === ingredientId)!;
-            this.addItem(dayOfWeek, mealType, ingredientId, ing.defaultQty, ing.defaultUnit);
-            return true;
-          }
-        }
-      ]
+
+    const modal = await this.modalCtrl.create({
+      component: IngredientPickerComponent,
+      componentProps: {
+        ingredients: this.ingredients,
+        mealLabel: `Aggiungi a ${MEAL_CONFIG[mealType].label}`,
+        mealType
+      },
+      breakpoints: [0, 0.6, 0.9],
+      initialBreakpoint: 0.9,
+      handleBehavior: 'cycle'
     });
-    await alert.present();
+
+    await modal.present();
+    const { data, role } = await modal.onWillDismiss<Ingredient>();
+
+    if (role === 'selected' && data) {
+      this.addItem(dayOfWeek, mealType, data.id, data.defaultQty, data.defaultUnit);
+    }
   }
 
   addItem(dayOfWeek: number, mealType: MealType, ingredientId: string, quantity: number, unit: string) {
+    this.addingItem = true;
     this.menuService.addItem({ dayOfWeek, mealType, ingredientId, quantity, unit: unit as any }).subscribe({
       next: (item) => {
+        this.addingItem = false;
+        const ing = this.ingredients.find(i => i.id === ingredientId);
+        const enriched = { ...item, ingredient: ing ? { id: ing.id, name: ing.name, defaultUnit: ing.defaultUnit, defaultQty: ing.defaultQty } : undefined };
         const day = this.days.find(d => d.dayOfWeek === dayOfWeek);
         const meal = day?.meals.find(m => m.mealType === mealType);
-        if (meal) meal.items = [...meal.items, item];
+        if (meal) meal.items = [...meal.items, enriched];
       },
       error: async (e) => {
+        this.addingItem = false;
         await this.showToast(e.error?.message || 'Errore aggiungendo alimento', 'danger');
       }
     });

@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonSearchbar,
   IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge,
-  IonFab, IonFabButton, IonSkeletonText,
-  AlertController, ToastController
+  IonFab, IonFabButton, IonSkeletonText, IonChip,
+  AlertController, ModalController, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { add, pencilOutline, trashOutline, nutritionOutline } from 'ionicons/icons';
 import { IngredientsService, Ingredient, Unit } from '../../features/ingredients/ingredients.service';
+import { IngredientFormComponent } from '../../shared/ingredient-form/ingredient-form.component';
 
 const UNIT_COLORS: Record<Unit, string> = {
   gr: '#2E7D32',
@@ -24,7 +25,8 @@ const UNIT_COLORS: Record<Unit, string> = {
     CommonModule, FormsModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonSearchbar,
     IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge,
-    IonFab, IonFabButton, IonSkeletonText
+    IonFab, IonFabButton, IonSkeletonText, IonChip,
+    IngredientFormComponent
   ],
   styles: [`
     .count-line {
@@ -105,6 +107,36 @@ const UNIT_COLORS: Record<Unit, string> = {
           style="--background: rgba(255,255,255,0.15); --color: white; --placeholder-color: rgba(255,255,255,0.7); --icon-color: rgba(255,255,255,0.8); --border-radius: 10px;">
         </ion-searchbar>
       </ion-toolbar>
+      <!-- Filter chips bar -->
+      <ion-toolbar style="--background: #f5f5f5; --border-width: 0; min-height: unset;" *ngIf="!loading">
+        <div style="display: flex; gap: 6px; padding: 6px 12px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;">
+          <!-- Unit filters -->
+          <ion-chip
+            *ngFor="let u of ['gr', 'ml', 'unit']"
+            [style.--background]="activeUnitFilter === u ? getUnitColor(u) : 'rgba(0,0,0,0.07)'"
+            [style.--color]="activeUnitFilter === u ? 'white' : '#555'"
+            style="font-size: 0.78rem; height: 28px; flex-shrink: 0;"
+            (click)="setUnitFilter(u)">
+            {{ u }}
+          </ion-chip>
+          <!-- Category filters -->
+          <ion-chip
+            *ngFor="let cat of existingCategories"
+            [style.--background]="activeCategoryFilter === cat ? 'var(--ion-color-secondary)' : 'rgba(0,0,0,0.07)'"
+            [style.--color]="activeCategoryFilter === cat ? 'white' : '#555'"
+            style="font-size: 0.78rem; height: 28px; flex-shrink: 0;"
+            (click)="setCategoryFilter(cat)">
+            {{ cat }}
+          </ion-chip>
+          <!-- Clear filters -->
+          <ion-chip
+            *ngIf="hasActiveFilters"
+            style="--background: rgba(211,47,47,0.1); --color: var(--ion-color-danger); font-size: 0.78rem; height: 28px; flex-shrink: 0;"
+            (click)="clearFilters()">
+            ✕ Reset
+          </ion-chip>
+        </div>
+      </ion-toolbar>
     </ion-header>
 
     <ion-content>
@@ -151,11 +183,11 @@ const UNIT_COLORS: Record<Unit, string> = {
       </div>
       <div class="empty-state" *ngIf="!loading && ingredients.length > 0 && filtered.length === 0">
         <h3>Nessun risultato</h3>
-        <p>Nessun ingrediente corrisponde a "{{ searchQuery }}"</p>
+        <p>Nessun ingrediente corrisponde ai filtri selezionati.</p>
       </div>
 
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button (click)="openCreateIngredient()">
+        <ion-fab-button (click)="openCreateIngredient()" [disabled]="saving">
           <ion-icon name="add"></ion-icon>
         </ion-fab-button>
       </ion-fab>
@@ -167,10 +199,15 @@ export class IngredientsPage implements OnInit {
   filtered: Ingredient[] = [];
   searchQuery = '';
   loading = true;
+  saving = false;
+
+  activeUnitFilter: Unit | null = null;
+  activeCategoryFilter: string | null = null;
 
   constructor(
     private ingredientsService: IngredientsService,
     private alertCtrl: AlertController,
+    private modalCtrl: ModalController,
     private toastCtrl: ToastController
   ) {
     addIcons({ add, pencilOutline, trashOutline, nutritionOutline });
@@ -178,13 +215,51 @@ export class IngredientsPage implements OnInit {
 
   ngOnInit() { this.loadIngredients(); }
 
-  getUnitColor(unit: Unit): string { return UNIT_COLORS[unit] || '#757575'; }
+  getUnitColor(unit: Unit | string): string { return (UNIT_COLORS as Record<string, string>)[unit] || '#757575'; }
+
+  get existingCategories(): string[] {
+    const cats = this.ingredients
+      .map(i => i.category)
+      .filter((c): c is string => !!c);
+    return [...new Set(cats)].sort();
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.activeUnitFilter || this.activeCategoryFilter || this.searchQuery);
+  }
 
   filterIngredients() {
+    let result = this.ingredients;
     const q = this.searchQuery.toLowerCase();
-    this.filtered = this.ingredients.filter(i =>
-      i.name.toLowerCase().includes(q) || (i.category || '').toLowerCase().includes(q)
-    );
+    if (q) {
+      result = result.filter(i =>
+        i.name.toLowerCase().includes(q) || (i.category || '').toLowerCase().includes(q)
+      );
+    }
+    if (this.activeUnitFilter) {
+      result = result.filter(i => i.defaultUnit === this.activeUnitFilter);
+    }
+    if (this.activeCategoryFilter) {
+      result = result.filter(i => i.category === this.activeCategoryFilter);
+    }
+    this.filtered = result;
+  }
+
+  setUnitFilter(unit: string) {
+    this.activeUnitFilter = this.activeUnitFilter === unit ? null : unit as Unit;
+    this.filterIngredients();
+  }
+
+  setCategoryFilter(cat: string | null) {
+    this.activeCategoryFilter = this.activeCategoryFilter === cat ? null : cat;
+    this.filterIngredients();
+  }
+
+  clearFilters() {
+    this.activeUnitFilter = null;
+    this.activeCategoryFilter = null;
+    this.searchQuery = '';
+    this.filterIngredients();
   }
 
   async loadIngredients() {
@@ -192,7 +267,7 @@ export class IngredientsPage implements OnInit {
     this.ingredientsService.list().subscribe({
       next: (list) => {
         this.ingredients = list.filter(i => !i.isDeleted);
-        this.filtered = [...this.ingredients];
+        this.filterIngredients();
         this.loading = false;
       },
       error: async () => {
@@ -203,78 +278,62 @@ export class IngredientsPage implements OnInit {
   }
 
   async openCreateIngredient() {
-    const alert = await this.alertCtrl.create({
-      header: 'Nuovo Ingrediente',
-      inputs: [
-        { name: 'name', type: 'text', placeholder: 'Nome *' },
-        { name: 'category', type: 'text', placeholder: 'Categoria (es. Latticini, Cereali)' },
-        { name: 'defaultUnit', type: 'text', placeholder: 'Unità: gr / ml / unit', value: 'gr' },
-        { name: 'defaultQty', type: 'number', placeholder: 'Quantità default (es. 100)', value: '100', min: 1 }
-      ],
-      buttons: [
-        { text: 'Annulla', role: 'cancel' },
-        {
-          text: 'Crea',
-          handler: (data) => {
-            if (!data.name?.trim()) { this.showToast('Il nome è obbligatorio', 'warning'); return false; }
-            const qty = parseFloat(data.defaultQty);
-            if (isNaN(qty) || qty <= 0) { this.showToast('La quantità deve essere > 0', 'warning'); return false; }
-            const unit: Unit = (['gr', 'ml', 'unit'].includes(data.defaultUnit)) ? data.defaultUnit as Unit : 'gr';
-            this.createIngredient({ name: data.name.trim(), category: data.category?.trim() || undefined, defaultUnit: unit, defaultQty: qty });
-            return true;
-          }
-        }
-      ]
+    const modal = await this.modalCtrl.create({
+      component: IngredientFormComponent,
+      componentProps: { existingCategories: this.existingCategories },
+      breakpoints: [0, 1],
+      initialBreakpoint: 1
     });
-    await alert.present();
+    await modal.present();
+    const { data, role } = await modal.onWillDismiss<Partial<Ingredient>>();
+    if (role === 'save' && data) {
+      this.createIngredient(data);
+    }
   }
 
   createIngredient(dto: Partial<Ingredient>) {
+    this.saving = true;
     this.ingredientsService.create(dto).subscribe({
       next: (ing) => {
+        this.saving = false;
         this.ingredients = [...this.ingredients, ing];
         this.filterIngredients();
-        this.showToast('Ingrediente creato', 'success');
+        this.showToast('✅ Ingrediente creato', 'success');
       },
-      error: async (e) => { await this.showToast(e.error?.message || 'Errore', 'danger'); }
+      error: async (e) => {
+        this.saving = false;
+        await this.showToast(e.error?.message || 'Errore', 'danger');
+      }
     });
   }
 
   async editIngredient(ing: Ingredient) {
-    const alert = await this.alertCtrl.create({
-      header: `Modifica: ${ing.name}`,
-      inputs: [
-        { name: 'name', type: 'text', value: ing.name },
-        { name: 'category', type: 'text', placeholder: 'Categoria', value: ing.category || '' },
-        { name: 'defaultUnit', type: 'text', placeholder: 'Unità: gr / ml / unit', value: ing.defaultUnit },
-        { name: 'defaultQty', type: 'number', value: String(ing.defaultQty), min: 1 }
-      ],
-      buttons: [
-        { text: 'Annulla', role: 'cancel' },
-        {
-          text: 'Salva',
-          handler: (data) => {
-            if (!data.name?.trim()) { this.showToast('Il nome è obbligatorio', 'warning'); return false; }
-            const qty = parseFloat(data.defaultQty);
-            if (isNaN(qty) || qty <= 0) { this.showToast('La quantità deve essere > 0', 'warning'); return false; }
-            const selectedUnit: Unit = (['gr', 'ml', 'unit'].includes(data.defaultUnit)) ? data.defaultUnit as Unit : ing.defaultUnit;
-            this.updateIngredient(ing.id, { name: data.name.trim(), category: data.category?.trim() || undefined, defaultUnit: selectedUnit, defaultQty: qty });
-            return true;
-          }
-        }
-      ]
+    const modal = await this.modalCtrl.create({
+      component: IngredientFormComponent,
+      componentProps: { ingredient: ing, existingCategories: this.existingCategories },
+      breakpoints: [0, 1],
+      initialBreakpoint: 1
     });
-    await alert.present();
+    await modal.present();
+    const { data, role } = await modal.onWillDismiss<Partial<Ingredient>>();
+    if (role === 'save' && data) {
+      this.updateIngredient(ing.id, data);
+    }
   }
 
   updateIngredient(id: string, dto: Partial<Ingredient>) {
+    this.saving = true;
     this.ingredientsService.update(id, dto).subscribe({
       next: (updated) => {
+        this.saving = false;
         this.ingredients = this.ingredients.map(i => i.id === id ? updated : i);
         this.filterIngredients();
-        this.showToast('Aggiornato', 'success');
+        this.showToast('✅ Aggiornato', 'success');
       },
-      error: async (e) => { await this.showToast(e.error?.message || 'Errore', 'danger'); }
+      error: async (e) => {
+        this.saving = false;
+        await this.showToast(e.error?.message || 'Errore', 'danger');
+      }
     });
   }
 

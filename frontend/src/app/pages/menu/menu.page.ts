@@ -3,38 +3,31 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
-  IonList, IonItem, IonLabel, IonIcon, IonCard, IonCardHeader,
-  IonCardTitle, IonCardContent,
-  AlertController, LoadingController, ToastController
+  IonList, IonItem, IonLabel, IonIcon, IonChip, IonBadge,
+  IonSkeletonText, IonNote,
+  AlertController, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { add, trash, logOut } from 'ionicons/icons';
+import { add, trashOutline, logOutOutline, sunny, restaurant, cafe, iceCream, moon, fastFood } from 'ionicons/icons';
 import { MenuService, WeeklyMenu, MealItem } from '../../features/menu/menu.service';
 import { IngredientsService, Ingredient, MealType } from '../../features/ingredients/ingredients.service';
 import { AuthService } from '../../core/services/auth.service';
 
-const DAY_NAMES = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
-const MEAL_LABELS: Record<MealType, string> = {
-  BREAKFAST: 'Colazione',
-  MORNING_SNACK: 'Spuntino mattina',
-  LUNCH: 'Pranzo',
-  AFTERNOON_SNACK: 'Merenda',
-  DINNER: 'Cena',
-  NIGHT_SNACK: 'Spuntino sera'
+const DAY_NAMES_SHORT = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+const DAY_NAMES_FULL = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+
+const MEAL_CONFIG: Record<MealType, { label: string; icon: string; color: string }> = {
+  BREAKFAST:        { label: 'Colazione',       icon: 'cafe',       color: '#F57C00' },
+  MORNING_SNACK:    { label: 'Spuntino',         icon: 'sunny',      color: '#FBC02D' },
+  LUNCH:            { label: 'Pranzo',           icon: 'restaurant', color: '#2E7D32' },
+  AFTERNOON_SNACK:  { label: 'Merenda',          icon: 'ice-cream',  color: '#7B1FA2' },
+  DINNER:           { label: 'Cena',             icon: 'moon',       color: '#1565C0' },
+  NIGHT_SNACK:      { label: 'Spuntino sera',    icon: 'fast-food',  color: '#546E7A' },
 };
 const ALL_MEAL_TYPES: MealType[] = ['BREAKFAST', 'MORNING_SNACK', 'LUNCH', 'AFTERNOON_SNACK', 'DINNER', 'NIGHT_SNACK'];
 
-interface DayView {
-  dayOfWeek: number;
-  name: string;
-  meals: MealView[];
-}
-
-interface MealView {
-  mealType: MealType;
-  label: string;
-  items: MealItem[];
-}
+interface MealView { mealType: MealType; label: string; icon: string; color: string; items: MealItem[]; }
+interface DayView { dayOfWeek: number; short: string; full: string; meals: MealView[]; isToday: boolean; }
 
 @Component({
   selector: 'app-menu',
@@ -42,110 +35,313 @@ interface MealView {
   imports: [
     CommonModule, FormsModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
-    IonList, IonItem, IonLabel, IonIcon, IonCard, IonCardHeader,
-    IonCardTitle, IonCardContent
+    IonList, IonItem, IonLabel, IonIcon, IonChip, IonBadge,
+    IonSkeletonText, IonNote
   ],
+  styles: [`
+    .day-selector-bar {
+      background: var(--ion-color-primary);
+      padding: 8px 12px 12px;
+      overflow-x: auto;
+      display: flex;
+      gap: 8px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .day-selector-bar::-webkit-scrollbar { display: none; }
+
+    .day-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 52px;
+      padding: 8px 6px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.8);
+      border: 2px solid transparent;
+      flex-shrink: 0;
+    }
+    .day-pill.selected {
+      background: white;
+      color: var(--ion-color-primary);
+      border-color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .day-pill .day-abbr {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .day-pill .day-num {
+      font-size: 1.1rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .today-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--ion-color-secondary);
+      margin-top: 2px;
+    }
+    .day-pill.selected .today-dot {
+      background: var(--ion-color-secondary);
+    }
+
+    .day-title {
+      padding: 16px 16px 8px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--ion-color-dark);
+    }
+
+    .meal-section {
+      margin: 0 12px 12px;
+      border-radius: var(--app-border-radius);
+      background: white;
+      box-shadow: var(--app-shadow);
+      overflow: hidden;
+    }
+    .meal-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      gap: 10px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .meal-icon-wrap {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .meal-icon-wrap ion-icon {
+      font-size: 18px;
+      color: white;
+    }
+    .meal-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      flex: 1;
+      color: #1a1a1a;
+    }
+    .meal-count {
+      font-size: 0.75rem;
+      color: var(--ion-color-medium);
+      margin-right: 4px;
+    }
+    .add-btn {
+      --padding-start: 6px;
+      --padding-end: 6px;
+      height: 30px;
+    }
+
+    .meal-items-list {
+      padding: 0;
+    }
+    .meal-item-row {
+      --padding-start: 14px;
+      --padding-end: 10px;
+      --inner-padding-end: 0;
+      --min-height: 44px;
+    }
+    .item-name {
+      font-size: 0.9rem;
+      color: #333;
+    }
+    .item-qty {
+      display: inline-block;
+      background: rgba(46,125,50,0.1);
+      color: var(--ion-color-primary);
+      border-radius: 6px;
+      padding: 1px 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    .meal-empty {
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      color: var(--ion-color-medium);
+      font-style: italic;
+    }
+
+    .skeleton-day {
+      padding: 0 12px;
+    }
+    .skeleton-card {
+      height: 80px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+  `],
   template: `
     <ion-header>
       <ion-toolbar>
         <ion-title>Menù Settimanale</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="logout()" fill="clear">
-            <ion-icon name="log-out" slot="icon-only"></ion-icon>
+          <ion-button (click)="logout()" fill="clear" style="--color:white">
+            <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
+      <!-- Day selector -->
+      <div class="day-selector-bar">
+        <div
+          *ngFor="let day of days"
+          class="day-pill"
+          [class.selected]="selectedDow === day.dayOfWeek"
+          (click)="selectDay(day.dayOfWeek)">
+          <span class="day-abbr">{{ day.short }}</span>
+          <span class="day-num">{{ getDayNumber(day.dayOfWeek) }}</span>
+          <div class="today-dot" *ngIf="day.isToday"></div>
+        </div>
+      </div>
     </ion-header>
 
     <ion-content>
-      <div *ngFor="let day of days" class="ion-margin-bottom">
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>{{ day.name }}</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <div *ngFor="let meal of day.meals" class="meal-slot ion-margin-bottom">
-              <div class="meal-header">
-                <strong>{{ meal.label }}</strong>
-                <ion-button size="small" fill="outline" (click)="openAddItem(day.dayOfWeek, meal.mealType)">
-                  <ion-icon name="add" slot="icon-only"></ion-icon>
-                </ion-button>
-              </div>
-              <ion-list *ngIf="meal.items.length > 0" lines="none">
-                <ion-item *ngFor="let item of meal.items">
-                  <ion-label>
-                    {{ item.ingredientName }} — {{ item.quantity }} {{ item.unit }}
-                  </ion-label>
-                  <ion-button slot="end" fill="clear" color="danger" (click)="removeItem(item.id)">
-                    <ion-icon name="trash" slot="icon-only"></ion-icon>
-                  </ion-button>
-                </ion-item>
-              </ion-list>
-              <p *ngIf="meal.items.length === 0" class="ion-padding-start" style="color: var(--ion-color-medium); font-size: 0.85em;">
-                Nessun alimento
-              </p>
+      <!-- Loading skeletons -->
+      <ng-container *ngIf="loading">
+        <div class="skeleton-day">
+          <ion-skeleton-text animated class="skeleton-card" style="margin-top:16px"></ion-skeleton-text>
+          <ion-skeleton-text animated class="skeleton-card"></ion-skeleton-text>
+          <ion-skeleton-text animated class="skeleton-card"></ion-skeleton-text>
+        </div>
+      </ng-container>
+
+      <!-- Day content -->
+      <ng-container *ngIf="!loading && selectedDay">
+        <div class="day-title">
+          {{ selectedDay.full }}
+          <span *ngIf="selectedDay.isToday" style="font-size:0.75rem; background: rgba(245,124,0,0.12); color:#F57C00; border-radius:6px; padding:2px 8px; margin-left:8px; font-weight:600;">Oggi</span>
+        </div>
+
+        <div *ngFor="let meal of selectedDay.meals" class="meal-section">
+          <div class="meal-header">
+            <div class="meal-icon-wrap" [style.background]="meal.color">
+              <ion-icon [name]="meal.icon"></ion-icon>
             </div>
-          </ion-card-content>
-        </ion-card>
-      </div>
+            <span class="meal-title">{{ meal.label }}</span>
+            <span class="meal-count" *ngIf="meal.items.length > 0">{{ meal.items.length }} alim.</span>
+            <ion-button
+              class="add-btn"
+              fill="clear"
+              color="primary"
+              size="small"
+              (click)="openAddItem(selectedDay.dayOfWeek, meal.mealType)">
+              <ion-icon name="add" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+
+          <ion-list class="meal-items-list" lines="inset" *ngIf="meal.items.length > 0">
+            <ion-item class="meal-item-row" *ngFor="let item of meal.items">
+              <ion-label>
+                <span class="item-name">{{ item.ingredientName }}</span>
+                <span class="item-qty">{{ item.quantity }} {{ item.unit }}</span>
+              </ion-label>
+              <ion-button slot="end" fill="clear" color="danger" size="small" (click)="removeItem(item.id)">
+                <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+            </ion-item>
+          </ion-list>
+
+          <p class="meal-empty" *ngIf="meal.items.length === 0">Nessun alimento pianificato</p>
+        </div>
+      </ng-container>
     </ion-content>
-  `,
-  styles: [`
-    .meal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 0;
-      border-bottom: 1px solid var(--ion-color-light);
-      margin-bottom: 4px;
-    }
-  `]
+  `
 })
 export class MenuPage implements OnInit {
   days: DayView[] = [];
+  selectedDow = 1;
+  loading = true;
   ingredients: Ingredient[] = [];
   private menu: WeeklyMenu | null = null;
+  private weekStartDate = new Date();
+
+  get selectedDay(): DayView | undefined {
+    return this.days.find(d => d.dayOfWeek === this.selectedDow);
+  }
 
   constructor(
     private menuService: MenuService,
     private ingredientsService: IngredientsService,
     private authService: AuthService,
     private alertCtrl: AlertController,
-    private loadingCtrl: LoadingController,
     private toastCtrl: ToastController
   ) {
-    addIcons({ add, trash, logOut });
+    addIcons({ add, trashOutline, logOutOutline, sunny, restaurant, cafe, iceCream, moon, fastFood });
   }
 
   ngOnInit() {
+    this.initWeekStart();
+    this.initDays();
+    this.setTodaySelected();
     this.loadData();
   }
 
+  private initWeekStart() {
+    const now = new Date();
+    const dow = now.getDay();
+    const diff = dow === 0 ? -6 : 1 - dow;
+    this.weekStartDate = new Date(now);
+    this.weekStartDate.setDate(now.getDate() + diff);
+  }
+
+  private initDays() {
+    this.days = DAY_NAMES_SHORT.map((short, i) => {
+      const date = new Date(this.weekStartDate);
+      date.setDate(this.weekStartDate.getDate() + i);
+      const today = new Date();
+      const isToday = date.toDateString() === today.toDateString();
+      return {
+        dayOfWeek: i + 1,
+        short,
+        full: DAY_NAMES_FULL[i],
+        isToday,
+        meals: ALL_MEAL_TYPES.map(mt => ({
+          mealType: mt,
+          label: MEAL_CONFIG[mt].label,
+          icon: MEAL_CONFIG[mt].icon,
+          color: MEAL_CONFIG[mt].color,
+          items: []
+        }))
+      };
+    });
+  }
+
+  private setTodaySelected() {
+    const todayDay = this.days.find(d => d.isToday);
+    if (todayDay) this.selectedDow = todayDay.dayOfWeek;
+  }
+
+  getDayNumber(dow: number): string {
+    const date = new Date(this.weekStartDate);
+    date.setDate(this.weekStartDate.getDate() + (dow - 1));
+    return String(date.getDate());
+  }
+
+  selectDay(dow: number) { this.selectedDow = dow; }
+
   async loadData() {
-    const loading = await this.loadingCtrl.create({ message: 'Caricamento...' });
-    await loading.present();
-    try {
-      await Promise.all([
-        this.loadMenu(),
-        this.loadIngredients()
-      ]);
-    } finally {
-      await loading.dismiss();
-    }
+    this.loading = true;
+    await Promise.all([this.loadMenu(), this.loadIngredients()]);
+    this.loading = false;
   }
 
   private loadMenu(): Promise<void> {
     return new Promise((resolve) => {
       this.menuService.getCurrentMenu().subscribe({
-        next: (menu) => {
-          this.menu = menu;
-          this.buildDayViews(menu);
-          resolve();
-        },
-        error: () => {
-          this.buildEmptyDayViews();
-          resolve();
-        }
+        next: (m) => { this.menu = m; this.applyMenuToViews(m); resolve(); },
+        error: () => resolve()
       });
     });
   }
@@ -153,82 +349,48 @@ export class MenuPage implements OnInit {
   private loadIngredients(): Promise<void> {
     return new Promise((resolve) => {
       this.ingredientsService.list().subscribe({
-        next: (list) => {
-          this.ingredients = list.filter(i => !i.isDeleted);
-          resolve();
-        },
+        next: (list) => { this.ingredients = list.filter(i => !i.isDeleted); resolve(); },
         error: () => resolve()
       });
     });
   }
 
-  private buildDayViews(menu: WeeklyMenu) {
-    this.days = DAY_NAMES.map((name, idx) => {
-      const dow = idx + 1;
-      const dayData = menu.days?.find(d => d.dayOfWeek === dow);
-      return {
-        dayOfWeek: dow,
-        name,
-        meals: ALL_MEAL_TYPES.map(mt => {
-          const mealData = dayData?.meals?.find(m => m.mealType === mt);
-          return {
-            mealType: mt,
-            label: MEAL_LABELS[mt],
-            items: mealData?.items ?? []
-          };
-        })
-      };
-    });
-  }
-
-  private buildEmptyDayViews() {
-    this.days = DAY_NAMES.map((name, idx) => ({
-      dayOfWeek: idx + 1,
-      name,
-      meals: ALL_MEAL_TYPES.map(mt => ({
-        mealType: mt,
-        label: MEAL_LABELS[mt],
-        items: []
-      }))
-    }));
+  private applyMenuToViews(menu: WeeklyMenu) {
+    for (const day of this.days) {
+      const dayData = menu.days?.find(d => d.dayOfWeek === day.dayOfWeek);
+      for (const meal of day.meals) {
+        const mealData = dayData?.meals?.find(m => m.mealType === meal.mealType);
+        meal.items = mealData?.items ?? [];
+      }
+    }
   }
 
   async openAddItem(dayOfWeek: number, mealType: MealType) {
     if (this.ingredients.length === 0) {
       const toast = await this.toastCtrl.create({
-        message: 'Aggiungi prima degli ingredienti',
-        duration: 2000,
-        color: 'warning'
+        message: '🌿 Aggiungi prima degli ingredienti nella sezione "Ingredienti"',
+        duration: 3000, color: 'warning', position: 'top'
       });
       await toast.present();
       return;
     }
-
-    const ingredientInputs = this.ingredients.map(ing => ({
+    const inputs = this.ingredients.map(ing => ({
       type: 'radio' as const,
-      label: `${ing.name} (${ing.defaultUnit})`,
+      label: `${ing.name}  (${ing.defaultQty} ${ing.defaultUnit})`,
       value: ing.id
     }));
-
     const alert = await this.alertCtrl.create({
-      header: 'Aggiungi alimento',
-      inputs: [
-        ...ingredientInputs,
-        {
-          type: 'number',
-          name: 'quantity',
-          placeholder: 'Quantità',
-          min: 1
-        }
-      ],
+      header: `Aggiungi a ${MEAL_CONFIG[mealType].label}`,
+      message: 'Seleziona un ingrediente:',
+      inputs,
       buttons: [
         { text: 'Annulla', role: 'cancel' },
         {
           text: 'Aggiungi',
-          handler: (data) => {
-            const ingredientId = data as string;
-            const ing = this.ingredients.find(i => i.id === ingredientId);
-            if (!ingredientId || !ing) return false;
+          cssClass: 'alert-confirm-btn',
+          handler: (ingredientId: string) => {
+            if (!ingredientId) return false;
+            const ing = this.ingredients.find(i => i.id === ingredientId)!;
             this.addItem(dayOfWeek, mealType, ingredientId, ing.defaultQty, ing.defaultUnit);
             return true;
           }
@@ -239,29 +401,14 @@ export class MenuPage implements OnInit {
   }
 
   addItem(dayOfWeek: number, mealType: MealType, ingredientId: string, quantity: number, unit: string) {
-    this.menuService.addItem({
-      dayOfWeek,
-      mealType,
-      ingredientId,
-      quantity,
-      unit: unit as 'gr' | 'ml' | 'unit'
-    }).subscribe({
+    this.menuService.addItem({ dayOfWeek, mealType, ingredientId, quantity, unit: unit as any }).subscribe({
       next: (item) => {
         const day = this.days.find(d => d.dayOfWeek === dayOfWeek);
-        if (day) {
-          const meal = day.meals.find(m => m.mealType === mealType);
-          if (meal) {
-            meal.items = [...meal.items, item];
-          }
-        }
+        const meal = day?.meals.find(m => m.mealType === mealType);
+        if (meal) meal.items = [...meal.items, item];
       },
       error: async (e) => {
-        const toast = await this.toastCtrl.create({
-          message: e.error?.message || 'Errore aggiungendo alimento',
-          duration: 2000,
-          color: 'danger'
-        });
-        await toast.present();
+        await this.showToast(e.error?.message || 'Errore aggiungendo alimento', 'danger');
       }
     });
   }
@@ -269,28 +416,20 @@ export class MenuPage implements OnInit {
   removeItem(itemId: string) {
     this.menuService.removeItem(itemId).subscribe({
       next: () => {
-        for (const day of this.days) {
+        for (const day of this.days)
           for (const meal of day.meals) {
             const idx = meal.items.findIndex(i => i.id === itemId);
-            if (idx !== -1) {
-              meal.items = meal.items.filter(i => i.id !== itemId);
-              return;
-            }
+            if (idx !== -1) { meal.items = meal.items.filter(i => i.id !== itemId); return; }
           }
-        }
       },
-      error: async (e) => {
-        const toast = await this.toastCtrl.create({
-          message: e.error?.message || 'Errore eliminando alimento',
-          duration: 2000,
-          color: 'danger'
-        });
-        await toast.present();
-      }
+      error: async (e) => { await this.showToast(e.error?.message || 'Errore', 'danger'); }
     });
   }
 
-  logout() {
-    this.authService.logout();
+  logout() { this.authService.logout(); }
+
+  private async showToast(message: string, color: string) {
+    const t = await this.toastCtrl.create({ message, duration: 2500, color, position: 'top' });
+    await t.present();
   }
 }

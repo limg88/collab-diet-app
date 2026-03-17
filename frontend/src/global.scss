@@ -8,3 +8,93 @@
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
+
+/* ─── App-wide custom styles ─── */
+
+ion-toolbar {
+  --background: var(--ion-color-primary);
+  --color: white;
+  --border-color: transparent;
+}
+
+ion-toolbar ion-title {
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+ion-tab-bar {
+  --background: #ffffff;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+ion-tab-button {
+  --color: var(--ion-color-medium);
+  --color-selected: var(--ion-color-primary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+ion-card {
+  border-radius: var(--app-border-radius) !important;
+  box-shadow: var(--app-shadow) !important;
+  margin: 8px 12px;
+}
+
+ion-fab-button {
+  --background: var(--ion-color-secondary);
+  --background-activated: var(--ion-color-secondary-shade);
+  --box-shadow: var(--app-shadow-lg);
+}
+
+ion-chip {
+  --background: rgba(46, 125, 50, 0.12);
+  --color: var(--ion-color-primary);
+  font-weight: 600;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 12px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 64px;
+    opacity: 0.25;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ion-color-dark);
+    margin: 0;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: var(--ion-color-medium);
+    margin: 0;
+    max-width: 260px;
+    line-height: 1.5;
+  }
+}
+
+.section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--ion-color-medium);
+  padding: 16px 16px 4px;
+}
+
+.purchased {
+  opacity: 0.55;
+  ion-label h2 {
+    text-decoration: line-through;
+  }
+}

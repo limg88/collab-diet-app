@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
-  IonList, IonItem, IonLabel, IonIcon, IonFab, IonFabButton,
-  IonCheckbox, IonInput, IonProgressBar, IonBadge, IonSkeletonText, IonNote, IonSearchbar,
+  IonIcon, IonFab, IonFabButton,
+  IonCheckbox, IonInput, IonProgressBar, IonSkeletonText, IonSearchbar,
   AlertController, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { add, trashOutline, refreshOutline, cartOutline, checkmarkCircle, storefrontOutline, peopleOutline, pencilOutline } from 'ionicons/icons';
+import { add, trashOutline, refreshOutline, cartOutline, checkmarkCircle,
+  storefrontOutline, peopleOutline, pencilOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
 import { ShoppingService, ShoppingItem } from '../../features/shopping/shopping.service';
 import { Unit } from '../../features/ingredients/ingredients.service';
 
@@ -18,111 +19,256 @@ import { Unit } from '../../features/ingredients/ingredients.service';
   imports: [
     CommonModule, FormsModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
-    IonList, IonItem, IonLabel, IonIcon, IonFab, IonFabButton,
-    IonCheckbox, IonInput, IonProgressBar, IonBadge, IonSkeletonText, IonNote, IonSearchbar
+    IonIcon, IonFab, IonFabButton,
+    IonCheckbox, IonInput, IonProgressBar, IonSkeletonText, IonSearchbar
   ],
   styles: [`
+    /* ─── Filter bar ─── */
+    ion-toolbar.filter-toolbar {
+      --background: #f5f5f5;
+      --border-width: 0;
+      --padding-start: 0;
+      --padding-end: 0;
+      --min-height: 50px;
+    }
+    .filter-inner {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px 8px;
+    }
+    .filter-inner ion-searchbar {
+      flex: 1;
+      --background: white;
+      --border-radius: 10px;
+      --box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+      --height: 36px;
+      padding: 0;
+    }
+    .vis-btn {
+      --border-radius: 20px;
+      --padding-start: 8px;
+      --padding-end: 8px;
+      --box-shadow: none;
+      height: 34px;
+      flex-shrink: 0;
+    }
+
+    /* ─── Progress card ─── */
     .progress-card {
-      margin: 12px;
+      margin: 12px 12px 0;
       background: white;
-      border-radius: 12px;
-      padding: 14px 16px;
-      box-shadow: var(--app-shadow);
+      border-radius: 14px;
+      padding: 14px 16px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
     }
     .progress-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: 8px;
       margin-bottom: 10px;
     }
-    .progress-title {
+    .progress-label {
+      flex: 1;
+      font-size: 0.78rem;
       font-weight: 700;
-      font-size: 0.9rem;
-      color: #333;
+      color: var(--ion-color-medium);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
     }
-    .progress-count {
-      font-size: 0.85rem;
+    .progress-fraction {
+      font-size: 1rem;
+      font-weight: 800;
       color: var(--ion-color-primary);
+    }
+    .progress-pct {
+      font-size: 0.78rem;
+      color: var(--ion-color-medium);
       font-weight: 600;
+      background: rgba(0,0,0,0.05);
+      border-radius: 10px;
+      padding: 1px 7px;
+    }
+    .progress-done-msg {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--ion-color-success);
+      text-align: center;
     }
 
-    .section-label {
-      padding: 12px 16px 4px;
+    /* ─── Section header ─── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 18px 16px 6px;
+    }
+    .section-head-label {
       font-size: 0.68rem;
       font-weight: 700;
       letter-spacing: 1.2px;
       text-transform: uppercase;
       color: var(--ion-color-medium);
     }
-
-    .shop-item {
-      --padding-start: 12px;
-      --padding-end: 10px;
-      --inner-padding-end: 0;
-      --background: white;
-      --min-height: 56px;
-      margin: 0;
-    }
-    .shop-item.purchased {
-      --background: #fafafa;
-      opacity: 0.6;
-    }
-
-    .item-name {
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: #1a1a1a;
-    }
-    .item-name.crossed { text-decoration: line-through; }
-
-    .item-sub {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 3px;
-    }
-    .qty-to-buy {
-      font-size: 0.8rem;
+    .section-count {
+      font-size: 0.7rem;
       font-weight: 700;
-      color: var(--ion-color-secondary);
+      background: rgba(0,0,0,0.06);
+      color: var(--ion-color-medium);
+      border-radius: 20px;
+      padding: 1px 8px;
     }
-    .qty-total {
-      font-size: 0.78rem;
-      color: #999;
-    }
-
-    .stock-area {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 2px;
-      flex-shrink: 0;
-    }
-    .stock-label {
-      font-size: 0.65rem;
-      color: #aaa;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .stock-input {
-      width: 64px;
-      background: #f5f5f5;
-      border-radius: 7px;
-      text-align: center;
-      --padding-start: 4px;
-      --padding-end: 4px;
-      --padding-top: 3px;
-      --padding-bottom: 3px;
-      font-size: 0.85rem;
-      font-weight: 600;
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(0,0,0,0.07);
+      border-radius: 1px;
     }
 
+    /* ─── List wrap ─── */
     .list-wrap {
       margin: 0 12px;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: var(--app-shadow);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
       background: white;
+    }
+
+    /* ─── Shop row ─── */
+    .shop-row {
+      display: flex;
+      align-items: flex-start;
+      padding: 11px 12px 11px 10px;
+      gap: 10px;
+      border-bottom: 1px solid #f2f2f2;
+      background: white;
+      transition: opacity 0.2s, background 0.2s;
+    }
+    .shop-row:last-child { border-bottom: none; }
+    .shop-row.purchased { opacity: 0.45; }
+
+    .shop-check {
+      --size: 22px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* body */
+    .shop-body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .shop-content { flex: 1; min-width: 0; }
+
+    /* main line: name + pills */
+    .shop-main-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      min-height: 24px;
+    }
+    .item-name {
+      flex: 1;
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: #1a1a1a;
+      min-width: 60px;
+      line-height: 1.3;
+    }
+    .item-name.crossed {
+      text-decoration: line-through;
+      color: var(--ion-color-medium);
+    }
+
+    /* qty / covered pills */
+    .qty-pill {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #e65100;
+      background: rgba(245,124,0,0.1);
+      border-radius: 20px;
+      padding: 2px 9px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .covered-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: rgba(46,125,50,0.1);
+      color: var(--ion-color-primary);
+      border-radius: 20px;
+      padding: 2px 9px;
+      flex-shrink: 0;
+    }
+
+    /* stock compact */
+    .stock-wrap {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 3px 7px 3px 5px;
+      flex-shrink: 0;
+    }
+    .stock-icon { font-size: 12px; color: #bbb; flex-shrink: 0; }
+    .stock-input {
+      width: 38px;
+      --padding-start: 2px;
+      --padding-end: 2px;
+      --padding-top: 0;
+      --padding-bottom: 0;
+      font-size: 0.8rem;
+      font-weight: 600;
+      --background: transparent;
+      text-align: center;
+    }
+
+    /* collab bar */
+    .collab-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+      margin-top: 5px;
+      padding-top: 4px;
+      border-top: 1px solid #f2f2f2;
+    }
+    .collab-icon { font-size: 11px; color: var(--ion-color-secondary); flex-shrink: 0; }
+    .collab-tag {
+      font-size: 0.7rem;
+      color: #bf360c;
+      background: rgba(245,124,0,0.08);
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+    .collab-stock-tag {
+      font-size: 0.7rem;
+      color: #7B1FA2;
+      background: rgba(123,31,162,0.07);
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+    .import-btn {
+      --color: #7B1FA2;
+      --padding-start: 5px;
+      --padding-end: 5px;
+      height: 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    /* extra actions */
+    .shop-actions {
+      display: flex;
+      align-items: flex-start;
+      flex-shrink: 0;
+      margin-top: -4px;
     }
   `],
   template: `
@@ -135,162 +281,152 @@ import { Unit } from '../../features/ingredients/ingredients.service';
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
-      <ion-toolbar style="--background: #f5f5f5; --border-width: 0;">
-        <ion-searchbar
-          placeholder="Cerca nella lista..."
-          [(ngModel)]="searchQuery"
-          style="--background: white; --border-radius: 10px; --box-shadow: var(--app-shadow);"
-          (ionInput)="searchQuery = $event.detail.value ?? ''">
-        </ion-searchbar>
-        <ion-buttons slot="end" style="padding-right: 8px; padding-bottom: 8px;">
+      <ion-toolbar class="filter-toolbar">
+        <div class="filter-inner">
+          <ion-searchbar
+            placeholder="Cerca nella lista..."
+            [(ngModel)]="searchQuery"
+            (ionInput)="searchQuery = $event.detail.value ?? ''">
+          </ion-searchbar>
           <ion-button
+            class="vis-btn"
             fill="solid"
             size="small"
             [color]="hidePurchased ? 'primary' : 'light'"
-            style="--border-radius: 8px; font-size: 0.72rem; font-weight: 700; height: 30px;"
             (click)="hidePurchased = !hidePurchased">
-            <ion-icon name="checkmark-circle" slot="start" style="font-size: 14px;"></ion-icon>
-            {{ hidePurchased ? 'Mostra tutti' : 'Nascondi acquistati' }}
+            <ion-icon [name]="hidePurchased ? 'eye-outline' : 'eye-off-outline'" slot="icon-only"></ion-icon>
           </ion-button>
-        </ion-buttons>
+        </div>
       </ion-toolbar>
     </ion-header>
 
     <ion-content>
       <!-- Skeleton -->
       <ng-container *ngIf="loading">
-        <div style="margin:12px; border-radius:12px; overflow:hidden;">
+        <div style="margin:12px; border-radius:14px; overflow:hidden;">
           <ion-skeleton-text animated style="height:72px; margin:0;"></ion-skeleton-text>
         </div>
-        <div style="margin:12px; border-radius:12px; overflow:hidden;">
-          <ion-skeleton-text animated style="height:60px; margin:0;" *ngFor="let x of [1,2,3,4]"></ion-skeleton-text>
+        <div style="margin:12px; border-radius:12px; overflow:hidden; margin-top:20px;">
+          <ion-skeleton-text animated style="height:56px; margin:0; border-bottom:1px solid #f2f2f2;"
+            *ngFor="let x of [1,2,3,4]"></ion-skeleton-text>
         </div>
       </ng-container>
 
       <ng-container *ngIf="!loading">
+
         <!-- Progress card -->
         <div class="progress-card" *ngIf="allItems.length > 0">
           <div class="progress-header">
-            <span class="progress-title">Progresso acquisti</span>
-            <span class="progress-count">{{ purchasedCount }}/{{ allItems.length }}</span>
+            <span class="progress-label">Acquisti</span>
+            <span class="progress-fraction">{{ purchasedCount }} / {{ allItems.length }}</span>
+            <span class="progress-pct">
+              {{ allItems.length > 0 ? (purchasedCount / allItems.length * 100 | number:'1.0-0') : 0 }}%
+            </span>
           </div>
           <ion-progress-bar
             [value]="allItems.length > 0 ? purchasedCount / allItems.length : 0"
             color="success">
           </ion-progress-bar>
+          <div class="progress-done-msg" *ngIf="purchasedCount > 0 && purchasedCount === allItems.length">
+            🎉 Lista completata!
+          </div>
         </div>
 
         <!-- MENU items -->
         <ng-container *ngIf="menuItems.length > 0">
-          <div class="section-label">Dal Menù ({{ menuItems.length }})</div>
+          <div class="section-head">
+            <span class="section-head-label">Dal Menù</span>
+            <span class="section-count">{{ menuItems.length }}</span>
+            <div class="section-line"></div>
+          </div>
           <div class="list-wrap">
-            <ion-list lines="inset">
-              <ion-item class="shop-item" [class.purchased]="item.isPurchased"
-                *ngFor="let item of menuItems">
-                <ion-checkbox
-                  slot="start"
-                  [checked]="item.isPurchased"
-                  (ionChange)="togglePurchased(item)"
-                  color="success">
-                </ion-checkbox>
-                <ion-label>
-                  <div class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</div>
-                  <div class="item-sub">
-                    <span class="qty-to-buy">{{ getQtyToBuy(item) }} {{ item.unit }}</span>
-                    <span class="qty-total" *ngIf="item.stockQty > 0">
-                      (scorta: {{ item.stockQty }})
-                    </span>
-                    <span class="qty-total" *ngIf="item.totalQty !== getQtyToBuy(item) && item.stockQty === 0">
-                      tot. {{ item.totalQty }}
-                    </span>
-                    <span
-                      *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased"
-                      style="font-size: 0.72rem; background: rgba(46,125,50,0.1); color: #2E7D32; border-radius: 4px; padding: 1px 6px; font-weight: 600;">
-                      ✓ In dispensa
-                    </span>
+            <div class="shop-row" [class.purchased]="item.isPurchased" *ngFor="let item of menuItems">
+              <ion-checkbox
+                class="shop-check"
+                [checked]="item.isPurchased"
+                (ionChange)="togglePurchased(item)"
+                color="success">
+              </ion-checkbox>
+              <div class="shop-body">
+                <div class="shop-content">
+                  <div class="shop-main-row">
+                    <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
+                    <span class="covered-pill" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓ Coperto</span>
+                    <span class="qty-pill" *ngIf="getQtyToBuy(item) > 0">{{ getQtyToBuy(item) }} {{ item.unit }}</span>
+                    <div class="stock-wrap">
+                      <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
+                      <ion-input
+                        type="number"
+                        class="stock-input"
+                        [value]="item.stockQty"
+                        (ionChange)="updateStock(item, $event)"
+                        placeholder="0"
+                        min="0">
+                      </ion-input>
+                    </div>
                   </div>
-                  <!-- Collaborator breakdown -->
-                  <div class="collab-info" *ngIf="hasCollaboratorData(item)" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; align-items: center;">
-                    <ion-icon name="people-outline" style="font-size: 12px; color: #F57C00; flex-shrink: 0;"></ion-icon>
-                    <span *ngFor="let c of item.collaboratorBreakdown" style="font-size: 0.72rem; color: #666; background: rgba(245,124,0,0.08); border-radius: 4px; padding: 1px 6px;">
+                  <div class="collab-bar" *ngIf="hasCollaboratorData(item) || item.collaboratorStockQty > 0">
+                    <ion-icon name="people-outline" class="collab-icon"></ion-icon>
+                    <span class="collab-tag" *ngFor="let c of item.collaboratorBreakdown">
                       {{ c.email.split('@')[0] }}: {{ c.qty }}{{ item.unit }}
                     </span>
+                    <ng-container *ngIf="item.collaboratorStockQty > 0">
+                      <span class="collab-stock-tag">📦 {{ item.collaboratorStockQty }}{{ item.unit }}</span>
+                      <ion-button class="import-btn" fill="clear" size="small"
+                        [disabled]="importingStock.has(item.id)"
+                        (click)="importCollaboratorStock(item)">Importa</ion-button>
+                    </ng-container>
                   </div>
-                  <!-- Collaborator stock import -->
-                  <div *ngIf="item.collaboratorStockQty > 0" style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-                    <span style="font-size: 0.72rem; color: #7B1FA2; background: rgba(123,31,162,0.08); border-radius: 4px; padding: 1px 6px;">
-                      📦 scorta collab: {{ item.collaboratorStockQty }}{{ item.unit }}
-                    </span>
-                    <ion-button
-                      fill="clear"
-                      size="small"
-                      style="--color: #7B1FA2; --padding-start: 4px; --padding-end: 4px; height: 22px; font-size: 0.68rem;"
-                      [disabled]="importingStock.has(item.id)"
-                      (click)="importCollaboratorStock(item)">
-                      Importa
-                    </ion-button>
-                  </div>
-                </ion-label>
-                <div slot="end" class="stock-area">
-                  <span class="stock-label">Scorta</span>
-                  <ion-input
-                    type="number"
-                    class="stock-input"
-                    [value]="item.stockQty"
-                    (ionChange)="updateStock(item, $event)"
-                    min="0">
-                  </ion-input>
                 </div>
-              </ion-item>
-            </ion-list>
+              </div>
+            </div>
           </div>
         </ng-container>
 
         <!-- FUORI_MENU items -->
         <ng-container *ngIf="extraItems.length > 0">
-          <div class="section-label">Extra ({{ extraItems.length }})</div>
+          <div class="section-head">
+            <span class="section-head-label">Extra</span>
+            <span class="section-count">{{ extraItems.length }}</span>
+            <div class="section-line"></div>
+          </div>
           <div class="list-wrap">
-            <ion-list lines="inset">
-              <ion-item class="shop-item" [class.purchased]="item.isPurchased"
-                *ngFor="let item of extraItems">
-                <ion-checkbox
-                  slot="start"
-                  [checked]="item.isPurchased"
-                  (ionChange)="togglePurchased(item)"
-                  color="success">
-                </ion-checkbox>
-                <ion-label>
-                  <div class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</div>
-                  <div class="item-sub">
-                    <span class="qty-to-buy">{{ getQtyToBuy(item) }} {{ item.unit }}</span>
-                    <span class="qty-total" *ngIf="item.stockQty > 0">(scorta: {{ item.stockQty }})</span>
-                    <span
-                      *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased"
-                      style="font-size: 0.72rem; background: rgba(46,125,50,0.1); color: #2E7D32; border-radius: 4px; padding: 1px 6px; font-weight: 600;">
-                      ✓ In dispensa
-                    </span>
+            <div class="shop-row" [class.purchased]="item.isPurchased" *ngFor="let item of extraItems">
+              <ion-checkbox
+                class="shop-check"
+                [checked]="item.isPurchased"
+                (ionChange)="togglePurchased(item)"
+                color="success">
+              </ion-checkbox>
+              <div class="shop-body">
+                <div class="shop-content">
+                  <div class="shop-main-row">
+                    <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
+                    <span class="covered-pill" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓ Coperto</span>
+                    <span class="qty-pill" *ngIf="getQtyToBuy(item) > 0">{{ getQtyToBuy(item) }} {{ item.unit }}</span>
+                    <div class="stock-wrap">
+                      <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
+                      <ion-input
+                        type="number"
+                        class="stock-input"
+                        [value]="item.stockQty"
+                        (ionChange)="updateStock(item, $event)"
+                        placeholder="0"
+                        min="0">
+                      </ion-input>
+                    </div>
                   </div>
-                </ion-label>
-                <div slot="end" style="display: flex; align-items: center; gap: 2px;">
+                </div>
+                <div class="shop-actions">
                   <ion-button fill="clear" color="primary" size="small" (click)="openEditExtra(item)">
                     <ion-icon name="pencil-outline" slot="icon-only"></ion-icon>
                   </ion-button>
-                  <div class="stock-area">
-                    <span class="stock-label">Scorta</span>
-                    <ion-input
-                      type="number"
-                      class="stock-input"
-                      [value]="item.stockQty"
-                      (ionChange)="updateStock(item, $event)"
-                      min="0">
-                    </ion-input>
-                  </div>
                   <ion-button fill="clear" color="danger" size="small" (click)="deleteExtra(item.id)">
                     <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
                   </ion-button>
                 </div>
-              </ion-item>
-            </ion-list>
+              </div>
+            </div>
           </div>
         </ng-container>
 
@@ -300,6 +436,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
           <h3>Lista vuota</h3>
           <p>Pianifica il menù settimanale per generare automaticamente la lista della spesa.</p>
         </div>
+
       </ng-container>
 
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
@@ -316,14 +453,13 @@ export class ShoppingPage implements OnInit {
   updatingItem: Set<string> = new Set();
   importingStock: Set<string> = new Set();
   searchQuery = '';
+  hidePurchased = false;
 
   get filteredItems(): ShoppingItem[] {
     const q = this.searchQuery.toLowerCase().trim();
     if (!q) return this.allItems;
     return this.allItems.filter(i => i.name.toLowerCase().includes(q));
   }
-
-  hidePurchased = false;
 
   get menuItems() {
     return this.filteredItems.filter(i => i.source === 'MENU' && (!this.hidePurchased || !i.isPurchased));
@@ -338,7 +474,8 @@ export class ShoppingPage implements OnInit {
     private alertCtrl: AlertController,
     private toastCtrl: ToastController
   ) {
-    addIcons({ add, trashOutline, refreshOutline, cartOutline, checkmarkCircle, storefrontOutline, peopleOutline, pencilOutline });
+    addIcons({ add, trashOutline, refreshOutline, cartOutline, checkmarkCircle,
+      storefrontOutline, peopleOutline, pencilOutline, eyeOutline, eyeOffOutline });
   }
 
   ngOnInit() { this.loadList(); }
@@ -459,22 +596,12 @@ export class ShoppingPage implements OnInit {
         {
           text: 'Salva',
           handler: (data) => {
-            if (!data.name?.trim()) {
-              this.showToast('Il nome è obbligatorio', 'warning');
-              return false;
-            }
+            if (!data.name?.trim()) { this.showToast('Il nome è obbligatorio', 'warning'); return false; }
             const qty = parseFloat(data.totalQty);
-            if (isNaN(qty) || qty <= 0) {
-              this.showToast('La quantità deve essere > 0', 'warning');
-              return false;
-            }
+            if (isNaN(qty) || qty <= 0) { this.showToast('La quantità deve essere > 0', 'warning'); return false; }
             const validUnits = ['gr', 'ml', 'unit'];
             const unit = validUnits.includes(data.unit) ? data.unit : item.unit;
-            this.applyExtraEdit(item.id, {
-              name: data.name.trim(),
-              unit: unit as any,
-              totalQty: qty
-            });
+            this.applyExtraEdit(item.id, { name: data.name.trim(), unit: unit as any, totalQty: qty });
             return true;
           }
         }
@@ -489,9 +616,7 @@ export class ShoppingPage implements OnInit {
         this.allItems = this.allItems.map(i => i.id === id ? { ...i, ...updated } : i);
         this.showToast('Extra aggiornato', 'success');
       },
-      error: async (e) => {
-        await this.showToast(e.error?.message || 'Errore aggiornando extra', 'danger');
-      }
+      error: async (e) => { await this.showToast(e.error?.message || 'Errore aggiornando extra', 'danger'); }
     });
   }
 

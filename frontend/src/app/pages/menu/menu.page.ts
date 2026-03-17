@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
-  IonList, IonItem, IonLabel, IonIcon, IonChip, IonBadge,
-  IonSkeletonText, IonNote,
+  IonIcon, IonChip,
+  IonSkeletonText,
   ModalController, ToastController, AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -36,8 +36,8 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
   imports: [
     CommonModule, FormsModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
-    IonList, IonItem, IonLabel, IonIcon, IonChip, IonBadge,
-    IonSkeletonText, IonNote,
+    IonIcon, IonChip,
+    IonSkeletonText,
     IngredientPickerComponent
   ],
   styles: [`
@@ -97,30 +97,65 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       background: var(--ion-color-secondary);
     }
 
-    .day-title {
-      padding: 16px 16px 8px;
-      font-size: 1.15rem;
+    /* ── Day title bar ── */
+    .day-title-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px 8px;
+      gap: 8px;
+    }
+    .day-name {
+      font-size: 1.1rem;
       font-weight: 700;
       color: var(--ion-color-dark);
     }
+    .day-date-label {
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: var(--ion-color-medium);
+    }
+    .today-badge {
+      font-size: 0.72rem;
+      background: rgba(245,124,0,0.12);
+      color: #F57C00;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-weight: 700;
+    }
+    .day-title-spacer { flex: 1; }
+    .meals-counter {
+      font-size: 0.73rem;
+      color: var(--ion-color-medium);
+      font-weight: 600;
+    }
+    .compact-chip {
+      --background: rgba(46,125,50,0.08);
+      --color: var(--ion-color-primary);
+      height: 24px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin: 0;
+      cursor: pointer;
+    }
 
+    /* ── Meal section ── */
     .meal-section {
-      margin: 0 12px 12px;
+      margin: 0 12px 10px;
       border-radius: var(--app-border-radius);
       background: white;
       box-shadow: var(--app-shadow);
       overflow: hidden;
+      border-left: 4px solid transparent;
     }
     .meal-header {
       display: flex;
       align-items: center;
-      padding: 12px 14px;
+      padding: 10px 12px 10px 12px;
       gap: 10px;
-      border-bottom: 1px solid #f0f0f0;
     }
     .meal-icon-wrap {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -128,19 +163,22 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       flex-shrink: 0;
     }
     .meal-icon-wrap ion-icon {
-      font-size: 18px;
+      font-size: 17px;
       color: white;
     }
     .meal-title {
       font-weight: 700;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       flex: 1;
       color: #1a1a1a;
     }
-    .meal-count {
-      font-size: 0.75rem;
+    .meal-count-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: rgba(0,0,0,0.06);
       color: var(--ion-color-medium);
-      margin-right: 4px;
+      border-radius: 20px;
+      padding: 1px 7px;
     }
     .add-btn {
       --padding-start: 6px;
@@ -148,33 +186,45 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       height: 30px;
     }
 
+    /* ── Meal items ── */
     .meal-items-list {
-      padding: 0;
+      border-top: 1px solid #f4f4f4;
     }
-    .meal-item-row {
-      --padding-start: 14px;
-      --padding-end: 10px;
-      --inner-padding-end: 0;
-      --min-height: 44px;
+    .menu-item-row {
+      display: flex;
+      align-items: center;
+      padding: 9px 10px 9px 14px;
+      gap: 8px;
+      border-bottom: 1px solid #f6f6f6;
     }
+    .menu-item-row:last-child { border-bottom: none; }
     .item-name {
+      flex: 1;
       font-size: 0.9rem;
-      color: #333;
+      font-weight: 500;
+      color: #222;
+      min-width: 0;
     }
     .item-qty {
-      display: inline-block;
-      background: rgba(46,125,50,0.1);
+      font-size: 0.76rem;
+      font-weight: 700;
+      background: rgba(46,125,50,0.09);
       color: var(--ion-color-primary);
-      border-radius: 6px;
-      padding: 1px 8px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      margin-left: 6px;
+      border-radius: 20px;
+      padding: 2px 9px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .item-del-btn {
+      --padding-start: 4px;
+      --padding-end: 4px;
+      height: 28px;
+      flex-shrink: 0;
     }
 
     .meal-empty {
       padding: 10px 14px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--ion-color-medium);
       font-style: italic;
     }
@@ -224,53 +274,48 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
 
       <!-- Day content -->
       <ng-container *ngIf="!loading && selectedDay">
-        <div class="day-title">
-          {{ selectedDay.full }}
-          <span *ngIf="selectedDay.isToday" style="font-size:0.75rem; background: rgba(245,124,0,0.12); color:#F57C00; border-radius:6px; padding:2px 8px; margin-left:8px; font-weight:600;">Oggi</span>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; padding: 0 16px 8px; gap: 8px; align-items: center;">
-          <span style="font-size: 0.75rem; color: var(--ion-color-medium);">
-            {{ visibleMealsCount }} / 6 pasti
-          </span>
+        <div class="day-title-row">
+          <span class="day-name">{{ selectedDay.full }}</span>
+          <span class="day-date-label">{{ getDayShortDate(selectedDay.dayOfWeek) }}</span>
+          <span class="today-badge" *ngIf="selectedDay.isToday">Oggi</span>
+          <span class="day-title-spacer"></span>
+          <span class="meals-counter">{{ visibleMealsCount }}/6</span>
           <ion-chip
-            style="--background: rgba(46,125,50,0.1); --color: var(--ion-color-primary); height: 26px; font-size: 0.72rem; font-weight: 700; margin: 0;"
+            class="compact-chip"
             (click)="hideEmptyMeals = !hideEmptyMeals">
-            {{ hideEmptyMeals ? 'Mostra tutti' : 'Compatta' }}
+            {{ hideEmptyMeals ? 'Tutti' : 'Compatta' }}
           </ion-chip>
         </div>
 
         <ng-container *ngFor="let meal of selectedDay.meals">
-          <div class="meal-section" *ngIf="!hideEmptyMeals || meal.items.length > 0">
-          <div class="meal-header">
-            <div class="meal-icon-wrap" [style.background]="meal.color">
-              <ion-icon [name]="meal.icon"></ion-icon>
+          <div class="meal-section" [style.border-left-color]="meal.color" *ngIf="!hideEmptyMeals || meal.items.length > 0">
+            <div class="meal-header">
+              <div class="meal-icon-wrap" [style.background]="meal.color">
+                <ion-icon [name]="meal.icon"></ion-icon>
+              </div>
+              <span class="meal-title">{{ meal.label }}</span>
+              <span class="meal-count-badge" *ngIf="meal.items.length > 0">{{ meal.items.length }}</span>
+              <ion-button
+                class="add-btn"
+                fill="clear"
+                color="primary"
+                size="small"
+                (click)="openAddItem(selectedDay.dayOfWeek, meal.mealType)">
+                <ion-icon name="add" slot="icon-only"></ion-icon>
+              </ion-button>
             </div>
-            <span class="meal-title">{{ meal.label }}</span>
-            <span class="meal-count" *ngIf="meal.items.length > 0">{{ meal.items.length }} alim.</span>
-            <ion-button
-              class="add-btn"
-              fill="clear"
-              color="primary"
-              size="small"
-              (click)="openAddItem(selectedDay.dayOfWeek, meal.mealType)">
-              <ion-icon name="add" slot="icon-only"></ion-icon>
-            </ion-button>
-          </div>
 
-          <ion-list class="meal-items-list" lines="inset" *ngIf="meal.items.length > 0">
-            <ion-item class="meal-item-row" *ngFor="let item of meal.items">
-              <ion-label>
+            <div class="meal-items-list" *ngIf="meal.items.length > 0">
+              <div class="menu-item-row" *ngFor="let item of meal.items">
                 <span class="item-name">{{ item.ingredient?.name ?? item.ingredientName ?? '—' }}</span>
                 <span class="item-qty">{{ item.quantity }} {{ item.unit }}</span>
-              </ion-label>
-              <ion-button slot="end" fill="clear" color="danger" size="small" (click)="removeItem(item.id)">
-                <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-              </ion-button>
-            </ion-item>
-          </ion-list>
+                <ion-button class="item-del-btn" fill="clear" color="danger" size="small" (click)="removeItem(item.id)">
+                  <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+              </div>
+            </div>
 
-          <p class="meal-empty" *ngIf="meal.items.length === 0">Nessun alimento pianificato</p>
+            <p class="meal-empty" *ngIf="meal.items.length === 0">Nessun alimento pianificato</p>
           </div>
         </ng-container>
       </ng-container>
@@ -358,6 +403,13 @@ export class MenuPage implements OnInit {
     const date = new Date(this.weekStartDate);
     date.setDate(this.weekStartDate.getDate() + (dow - 1));
     return String(date.getDate());
+  }
+
+  getDayShortDate(dow: number): string {
+    const date = new Date(this.weekStartDate);
+    date.setDate(this.weekStartDate.getDate() + (dow - 1));
+    const months = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+    return `${date.getDate()} ${months[date.getMonth()]}`;
   }
 
   selectDay(dow: number) { this.selectedDow = dow; }

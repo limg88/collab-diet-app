@@ -142,7 +142,7 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
     .meal-section {
       margin: 0 12px 10px;
       border-radius: var(--app-border-radius);
-      background: white;
+      background: var(--ion-card-background);
       box-shadow: var(--app-shadow);
       overflow: hidden;
       border-left: 4px solid transparent;
@@ -170,7 +170,7 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       font-weight: 700;
       font-size: 0.92rem;
       flex: 1;
-      color: #1a1a1a;
+      color: var(--ion-text-color);
     }
     .meal-count-badge {
       font-size: 0.7rem;
@@ -188,21 +188,21 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
 
     /* ── Meal items ── */
     .meal-items-list {
-      border-top: 1px solid #f4f4f4;
+      border-top: 1px solid var(--ion-border-color);
     }
     .menu-item-row {
       display: flex;
       align-items: center;
       padding: 9px 10px 9px 14px;
       gap: 8px;
-      border-bottom: 1px solid #f6f6f6;
+      border-bottom: 1px solid var(--ion-border-color);
     }
     .menu-item-row:last-child { border-bottom: none; }
     .item-name {
       flex: 1;
       font-size: 0.9rem;
       font-weight: 500;
-      color: #222;
+      color: var(--ion-text-color);
       min-width: 0;
     }
     .item-qty {

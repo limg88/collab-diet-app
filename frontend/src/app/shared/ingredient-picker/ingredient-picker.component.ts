@@ -39,12 +39,12 @@ import { Ingredient, MealType } from '../../features/ingredients/ingredients.ser
     .empty { text-align: center; padding: 40px 20px; color: var(--ion-color-medium); }
     .qty-step { padding: 32px 24px; display: flex; flex-direction: column; gap: 24px; }
     .qty-ingredient-card { background: rgba(46,125,50,0.06); border-radius: 12px; padding: 16px; }
-    .qty-ing-name { font-weight: 700; font-size: 1.1rem; color: #1a1a1a; }
+    .qty-ing-name { font-weight: 700; font-size: 1.1rem; color: var(--ion-text-color); }
     .qty-ing-unit { font-size: 0.82rem; color: var(--ion-color-medium); margin-top: 3px; }
     .qty-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ion-color-medium); margin-bottom: 8px; }
-    .qty-input-wrap { background: white; border: 2px solid var(--ion-color-primary); border-radius: 12px; padding: 8px 4px; display: flex; align-items: center; gap: 0; }
+    .qty-input-wrap { background: var(--ion-item-background); border: 2px solid var(--ion-color-primary); border-radius: 12px; padding: 8px 4px; display: flex; align-items: center; gap: 0; }
     .qty-main-input { font-size: 1.6rem; font-weight: 700; color: var(--ion-color-primary); --padding-start: 0; --padding-end: 0; text-align: center; flex: 1; }
-    .qty-unit-label { font-size: 1rem; font-weight: 600; color: #888; flex-shrink: 0; margin-left: 8px; margin-right: 4px; }
+    .qty-unit-label { font-size: 1rem; font-weight: 600; color: var(--ion-color-medium); flex-shrink: 0; margin-left: 8px; margin-right: 4px; }
     .stepper-btn { --padding-start: 8px; --padding-end: 8px; --color: var(--ion-color-primary); font-size: 1.4rem; font-weight: 700; height: 48px; flex-shrink: 0; }
     .confirm-btn { --background: var(--ion-color-primary); --border-radius: 12px; font-weight: 700; font-size: 1rem; height: 52px; }
   `],

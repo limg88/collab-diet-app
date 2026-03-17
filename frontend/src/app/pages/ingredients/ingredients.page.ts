@@ -44,7 +44,7 @@ const UNIT_COLORS: Record<Unit, string> = {
     .ing-name {
       font-weight: 600;
       font-size: 0.95rem;
-      color: #1a1a1a;
+      color: var(--ion-text-color);
     }
     .ing-meta {
       display: flex;
@@ -61,7 +61,7 @@ const UNIT_COLORS: Record<Unit, string> = {
     }
     .qty-text {
       font-size: 0.82rem;
-      color: #666;
+      color: var(--ion-color-medium);
     }
     .cat-text {
       font-size: 0.78rem;

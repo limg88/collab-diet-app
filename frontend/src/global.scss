@@ -9,11 +9,10 @@
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-/* ─── App-wide custom styles ─── */
-
+/* ─── Toolbar ─── */
 ion-toolbar {
-  --background: var(--ion-color-primary);
-  --color: white;
+  --background: var(--ion-toolbar-background);
+  --color: var(--ion-toolbar-color);
   --border-color: transparent;
 }
 
@@ -22,9 +21,22 @@ ion-toolbar ion-title {
   letter-spacing: -0.3px;
 }
 
+/* ─── Lists & items ─── */
+ion-list {
+  background: transparent;
+  padding: 0;
+}
+
+ion-item {
+  --background: var(--ion-item-background);
+  --border-color: var(--ion-border-color);
+  --color: var(--ion-text-color);
+}
+
+/* ─── Tab bar ─── */
 ion-tab-bar {
-  --background: #ffffff;
-  border-top: 1px solid rgba(0,0,0,0.08);
+  --background: var(--ion-tab-bar-background);
+  border-top: 1px solid var(--ion-tab-bar-border-color);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -35,24 +47,60 @@ ion-tab-button {
   font-weight: 600;
 }
 
+/* ─── Cards ─── */
 ion-card {
+  background: var(--ion-card-background);
   border-radius: var(--app-border-radius) !important;
   box-shadow: var(--app-shadow) !important;
   margin: 8px 12px;
 }
 
+/* ─── FAB ─── */
 ion-fab-button {
   --background: var(--ion-color-secondary);
   --background-activated: var(--ion-color-secondary-shade);
   --box-shadow: var(--app-shadow-lg);
 }
 
+/* ─── Chips ─── */
 ion-chip {
   --background: rgba(46, 125, 50, 0.12);
   --color: var(--ion-color-primary);
   font-weight: 600;
 }
 
+/* ─── Searchbar ─── */
+ion-searchbar {
+  --background: var(--ion-item-background);
+  --color: var(--ion-text-color);
+  --placeholder-color: var(--ion-color-medium);
+  --icon-color: var(--ion-color-medium);
+}
+
+/* ─── Input ─── */
+ion-input {
+  --color: var(--ion-text-color);
+  --placeholder-color: var(--ion-color-medium);
+}
+
+/* ─── Select ─── */
+ion-select {
+  color: var(--ion-text-color);
+}
+
+/* ─── Progress bar ─── */
+ion-progress-bar {
+  border-radius: 4px;
+  --buffer-background: var(--ion-border-color);
+}
+
+/* ─── Skeleton ─── */
+ion-skeleton-text {
+  --background: var(--ion-border-color);
+  --background-rgb: 235, 235, 235;
+}
+
+/* ─── Empty state (global pattern) ─── */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -65,6 +113,7 @@ ion-chip {
   .empty-icon {
     font-size: 64px;
     opacity: 0.25;
+    color: var(--ion-color-primary);
   }
 
   h3 {
@@ -83,6 +132,7 @@ ion-chip {
   }
 }
 
+/* ─── Section title (global pattern) ─── */
 .section-title {
   font-size: 0.7rem;
   font-weight: 700;
@@ -92,6 +142,7 @@ ion-chip {
   padding: 16px 16px 4px;
 }
 
+/* ─── Purchased state ─── */
 .purchased {
   opacity: 0.55;
   ion-label h2 {

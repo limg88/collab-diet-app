@@ -25,7 +25,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
   styles: [`
     /* ─── Filter bar ─── */
     ion-toolbar.filter-toolbar {
-      --background: #f5f5f5;
+      --background: var(--ion-color-light);
       --border-width: 0;
       --padding-start: 0;
       --padding-end: 0;
@@ -39,7 +39,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
     }
     .filter-inner ion-searchbar {
       flex: 1;
-      --background: white;
+      --background: var(--ion-card-background);
       --border-radius: 10px;
       --box-shadow: 0 1px 6px rgba(0,0,0,0.08);
       --height: 36px;
@@ -57,7 +57,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
     /* ─── Progress card ─── */
     .progress-card {
       margin: 12px 12px 0;
-      background: white;
+      background: var(--ion-card-background);
       border-radius: 14px;
       padding: 14px 16px 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.07);
@@ -132,7 +132,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-      background: white;
+      background: var(--ion-card-background);
     }
 
     /* ─── Shop row ─── */
@@ -141,8 +141,8 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       align-items: flex-start;
       padding: 11px 12px 11px 10px;
       gap: 10px;
-      border-bottom: 1px solid #f2f2f2;
-      background: white;
+      border-bottom: 1px solid var(--ion-border-color);
+      background: var(--ion-item-background);
       transition: opacity 0.2s, background 0.2s;
     }
     .shop-row:last-child { border-bottom: none; }
@@ -176,7 +176,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       flex: 1;
       font-weight: 600;
       font-size: 0.92rem;
-      color: #1a1a1a;
+      color: var(--ion-text-color);
       min-width: 60px;
       line-height: 1.3;
     }
@@ -211,12 +211,12 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       display: flex;
       align-items: center;
       gap: 3px;
-      background: #f5f5f5;
+      background: var(--ion-color-light);
       border-radius: 8px;
       padding: 3px 7px 3px 5px;
       flex-shrink: 0;
     }
-    .stock-icon { font-size: 12px; color: #bbb; flex-shrink: 0; }
+    .stock-icon { font-size: 12px; color: var(--ion-color-medium); flex-shrink: 0; }
     .stock-input {
       width: 38px;
       --padding-start: 2px;
@@ -237,7 +237,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       gap: 4px;
       margin-top: 5px;
       padding-top: 4px;
-      border-top: 1px solid #f2f2f2;
+      border-top: 1px solid var(--ion-border-color);
     }
     .collab-icon { font-size: 11px; color: var(--ion-color-secondary); flex-shrink: 0; }
     .collab-tag {

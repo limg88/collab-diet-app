@@ -45,7 +45,7 @@ const STATUS_IT: Record<string, string> = {
 
     /* Invite card */
     .invite-card {
-      background: white;
+      background: var(--ion-card-background);
       border-radius: 16px;
       padding: 20px;
       box-shadow: var(--app-shadow);
@@ -53,7 +53,7 @@ const STATUS_IT: Record<string, string> = {
     .card-title {
       font-size: 1rem;
       font-weight: 700;
-      color: #1a1a1a;
+      color: var(--ion-text-color);
       margin: 0 0 4px;
     }
     .card-subtitle {
@@ -70,7 +70,7 @@ const STATUS_IT: Record<string, string> = {
       flex: 1;
       display: flex;
       align-items: center;
-      background: #F5F5F5;
+      background: var(--ion-color-light);
       border-radius: 10px;
       border: 2px solid transparent;
       padding: 0 12px;
@@ -81,14 +81,14 @@ const STATUS_IT: Record<string, string> = {
       background: #fff;
     }
     .invite-input-wrap ion-icon {
-      color: #bbb;
+      color: var(--ion-color-medium);
       font-size: 16px;
       flex-shrink: 0;
     }
     .invite-input-wrap ion-input {
       --padding-start: 8px;
       --background: transparent;
-      --color: #1a1a1a;
+      --color: var(--ion-text-color);
       font-size: 0.9rem;
     }
     .send-btn {
@@ -101,7 +101,7 @@ const STATUS_IT: Record<string, string> = {
 
     /* Section block */
     .section-block {
-      background: white;
+      background: var(--ion-card-background);
       border-radius: 16px;
       box-shadow: var(--app-shadow);
       overflow: hidden;
@@ -111,7 +111,7 @@ const STATUS_IT: Record<string, string> = {
       align-items: center;
       padding: 14px 16px 10px;
       gap: 8px;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--ion-border-color);
     }
     .section-head ion-icon {
       font-size: 18px;
@@ -121,7 +121,7 @@ const STATUS_IT: Record<string, string> = {
       font-weight: 700;
       font-size: 0.92rem;
       flex: 1;
-      color: #1a1a1a;
+      color: var(--ion-text-color);
     }
     .section-count {
       font-size: 0.75rem;
@@ -138,7 +138,7 @@ const STATUS_IT: Record<string, string> = {
       align-items: center;
       padding: 12px 16px;
       gap: 12px;
-      border-bottom: 1px solid #f8f8f8;
+      border-bottom: 1px solid var(--ion-border-color);
     }
     .collab-row:last-child { border-bottom: none; }
 
@@ -166,7 +166,7 @@ const STATUS_IT: Record<string, string> = {
     .collab-email {
       font-weight: 600;
       font-size: 0.88rem;
-      color: #1a1a1a;
+      color: var(--ion-text-color);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -201,7 +201,7 @@ const STATUS_IT: Record<string, string> = {
       align-items: center;
       padding: 12px 16px;
       gap: 10px;
-      border-bottom: 1px solid #f8f8f8;
+      border-bottom: 1px solid var(--ion-border-color);
     }
     .received-row:last-child { border-bottom: none; }
     .received-info { flex: 1; overflow: hidden; }
@@ -213,7 +213,7 @@ const STATUS_IT: Record<string, string> = {
     .received-email {
       font-weight: 600;
       font-size: 0.9rem;
-      color: #1a1a1a;
+      color: var(--ion-text-color);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -255,7 +255,7 @@ const STATUS_IT: Record<string, string> = {
     .empty-state h3 {
       font-size: 1.1rem;
       font-weight: 700;
-      color: #333;
+      color: var(--ion-color-dark);
       margin: 0;
     }
     .empty-state p {

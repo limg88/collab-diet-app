@@ -80,7 +80,7 @@ const ALL_MEAL_TYPES: MealType[] = ['BREAKFAST','MORNING_SNACK','LUNCH','AFTERNO
     }
     .meal-type-label {
       font-size: 0.875rem;
-      color: #333;
+      color: var(--ion-text-color);
     }
     .error-msg {
       padding: 8px 16px;
@@ -90,7 +90,7 @@ const ALL_MEAL_TYPES: MealType[] = ['BREAKFAST','MORNING_SNACK','LUNCH','AFTERNO
     }
     ion-footer {
       padding: 12px;
-      background: white;
+      background: var(--ion-card-background);
       box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
     }
     .save-btn {

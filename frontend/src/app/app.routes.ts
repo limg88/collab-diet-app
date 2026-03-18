@@ -14,6 +14,7 @@ export const routes: Routes = [
       { path: 'ingredients', loadComponent: () => import('./pages/ingredients/ingredients.page').then(m => m.IngredientsPage) },
       { path: 'shopping', loadComponent: () => import('./pages/shopping/shopping.page').then(m => m.ShoppingPage) },
       { path: 'collaboration', loadComponent: () => import('./pages/collaboration/collaboration.page').then(m => m.CollaborationPage) },
+      { path: 'profile', loadComponent: () => import('./pages/profile/profile.page').then(m => m.ProfilePage) },
     ]
   },
   { path: '**', redirectTo: 'menu' }

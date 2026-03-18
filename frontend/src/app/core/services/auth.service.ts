@@ -12,6 +12,15 @@ export class AuthService {
   get token(): string | null { return localStorage.getItem('token'); }
   get isAuthenticated(): boolean { return !!this.token; }
 
+  get userEmail(): string | null {
+    const t = this.token;
+    if (!t) return null;
+    try {
+      const payload = JSON.parse(atob(t.split('.')[1]));
+      return payload.email ?? payload.sub ?? null;
+    } catch { return null; }
+  }
+
   register(email: string, password: string) {
     return this.http.post<{ access_token: string }>(`${this.base}/auth/register`, { email, password })
       .pipe(tap(r => localStorage.setItem('token', r.access_token)));

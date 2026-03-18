@@ -7,6 +7,10 @@ import { IngredientsModule } from './ingredients/ingredients.module';
 import { MenuModule } from './menu/menu.module';
 import { ShoppingModule } from './shopping/shopping.module';
 import { CollaborationModule } from './collaboration/collaboration.module';
+import { ProfileModule } from './profile/profile.module';
+import { UserProfile } from './profile/entities/user-profile.entity';
+import { WeightRecord } from './profile/entities/weight-record.entity';
+import { BodyMeasurementRecord } from './profile/entities/body-measurement-record.entity';
 import { User } from './users/user.entity';
 import { Ingredient } from './ingredients/ingredient.entity';
 import { WeeklyMenu } from './menu/entities/weekly-menu.entity';
@@ -37,6 +41,9 @@ import { CollaborationInvite } from './collaboration/invite.entity';
           MealItem,
           ShoppingItem,
           CollaborationInvite,
+          UserProfile,
+          WeightRecord,
+          BodyMeasurementRecord,
         ],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         logging: configService.get<string>('NODE_ENV') === 'development',
@@ -48,6 +55,7 @@ import { CollaborationInvite } from './collaboration/invite.entity';
     MenuModule,
     ShoppingModule,
     CollaborationModule,
+    ProfileModule,
   ],
 })
 export class AppModule {}

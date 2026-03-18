@@ -34,5 +34,23 @@ services:
       postgres:
         condition: service_healthy
 
+  # Optional seed service — run once with: docker compose run --rm seed
+  seed:
+    image: postgres:16-alpine
+    profiles: [seed]
+    environment:
+      PGPASSWORD: diet_pass
+    volumes:
+      - ./backend/seed.sql:/seed.sql:ro
+    entrypoint: >
+      sh -c "
+        until pg_isready -h postgres -U diet_user -d diet_db; do sleep 1; done;
+        psql -h postgres -U diet_user -d diet_db -f /seed.sql
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
 volumes:
   pgdata:

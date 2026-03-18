@@ -22,4 +22,8 @@ export class UsersService {
     const user = this.userRepository.create({ email, passwordHash });
     return this.userRepository.save(user);
   }
+
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    await this.userRepository.update(userId, { passwordHash });
+  }
 }

@@ -8,12 +8,13 @@ import {
   ModalController, ToastController, AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { add, trashOutline, logOutOutline, sunny, restaurant, cafe, iceCream, moon, fastFood } from 'ionicons/icons';
+import { add, trashOutline, logOutOutline, keyOutline, sunny, restaurant, cafe, iceCream, moon, fastFood } from 'ionicons/icons';
 import { MenuService, WeeklyMenu, MealItem } from '../../features/menu/menu.service';
 import { IngredientsService, Ingredient, MealType } from '../../features/ingredients/ingredients.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { IngredientPickerComponent } from '../../shared/ingredient-picker/ingredient-picker.component';
+import { ChangePasswordModalComponent } from '../../shared/change-password-modal/change-password-modal.component';
 
 const DAY_NAMES_SHORT = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 const DAY_NAMES_FULL = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
@@ -39,7 +40,7 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
     IonIcon, IonChip,
     IonSkeletonText,
-    IngredientPickerComponent
+    IngredientPickerComponent, ChangePasswordModalComponent
   ],
   styles: [`
     .day-selector-bar {
@@ -250,6 +251,9 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       <ion-toolbar>
         <ion-title>Menù Settimanale</ion-title>
         <ion-buttons slot="end">
+          <ion-button (click)="openChangePassword()" fill="clear" style="--color:rgba(255,255,255,0.6); --padding-start:8px; --padding-end:8px;" title="Cambia password">
+            <ion-icon name="key-outline" slot="icon-only" style="font-size:18px;"></ion-icon>
+          </ion-button>
           <ion-button (click)="logout()" fill="clear" style="--color:rgba(255,255,255,0.6); --padding-start:8px; --padding-end:8px;" title="Esci dall'account">
             <ion-icon name="log-out-outline" slot="icon-only" style="font-size:18px;"></ion-icon>
           </ion-button>
@@ -357,7 +361,7 @@ export class MenuPage implements OnInit {
     private toastCtrl: ToastController,
     private alertCtrl: AlertController
   ) {
-    addIcons({ add, trashOutline, logOutOutline, sunny, restaurant, cafe, iceCream, moon, fastFood });
+    addIcons({ add, trashOutline, logOutOutline, keyOutline, sunny, restaurant, cafe, iceCream, moon, fastFood });
   }
 
   ngOnInit() {
@@ -538,6 +542,15 @@ export class MenuPage implements OnInit {
       ]
     });
     await alert.present();
+  }
+
+  async openChangePassword() {
+    const modal = await this.modalCtrl.create({ component: ChangePasswordModalComponent });
+    await modal.present();
+    const { role } = await modal.onWillDismiss();
+    if (role === 'saved') {
+      await this.showToast('Password aggiornata con successo', 'success');
+    }
   }
 
   logout() { this.authService.logout(); }

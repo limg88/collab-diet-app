@@ -216,13 +216,6 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       flex-shrink: 0;
       color: var(--ion-color-medium);
     }
-    .stock-toggle-btn {
-      --padding-start: 4px;
-      --padding-end: 4px;
-      height: 22px;
-      flex-shrink: 0;
-    }
-    .stock-toggle-btn ion-icon { font-size: 14px; }
 
     /* ── Secondary line: stock + collab import + extra actions ── */
     .shop-secondary {
@@ -232,6 +225,16 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       padding-left: 27px; /* align under name (checkbox width + gap) */
     }
 
+    .to-buy-chip {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--ion-color-primary);
+      background: rgba(var(--ion-color-primary-rgb), 0.1);
+      border-radius: 20px;
+      padding: 2px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
     .import-btn {
       --color: var(--ion-color-tertiary);
       --padding-start: 6px;
@@ -364,8 +367,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                 <ion-checkbox class="shop-check" [checked]="item.isPurchased" (ionChange)="togglePurchased(item)" color="success"></ion-checkbox>
                 <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
                 <ng-container *ngIf="!updatingItem.has(item.id); else spinnerTpl">
-                  <span class="item-qty" *ngIf="getQtyToBuy(item) > 0">({{ getQtyToBuy(item) }} {{ item.unit }})</span>
-                  <span class="item-covered" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓ coperto</span>
+                  <span class="item-qty">({{ item.totalQty }} {{ item.unit }})</span>
                 </ng-container>
                 <ng-template #spinnerTpl>
                   <ion-spinner name="crescent" class="item-spinner"></ion-spinner>
@@ -373,16 +375,9 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                 <span class="collab-badge" *ngFor="let c of item.collaboratorBreakdown"
                   [title]="c.email"
                   [style.background]="getCollabBadgeColor(c.email)">{{ getEmailInitials(c.email) }}</span>
-                <ion-button fill="clear" size="small" class="stock-toggle-btn"
-                  *ngIf="item.stockQty === 0 && item.collaboratorStockQty === 0"
-                  [color]="expandedStock.has(item.id) ? 'primary' : 'medium'"
-                  title="Gestisci scorta in casa"
-                  (click)="toggleStockExpand(item.id)">
-                  <ion-icon name="storefront-outline" slot="icon-only"></ion-icon>
-                </ion-button>
               </div>
-              <!-- Secondary line: stock management — when stock present, collab stock available, or user tapped storefront -->
-              <div class="shop-secondary" *ngIf="item.stockQty > 0 || item.collaboratorStockQty > 0 || expandedStock.has(item.id)">
+              <!-- Secondary line: dispensa always visible -->
+              <div class="shop-secondary">
                 <div class="stock-wrap">
                   <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
                   <ion-button fill="clear" size="small" class="stock-btn" color="medium" (click)="stepStock(item, -1)">
@@ -398,10 +393,12 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                     <ion-icon name="add-outline" slot="icon-only"></ion-icon>
                   </ion-button>
                 </div>
+                <span class="item-covered" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓ coperto</span>
+                <span class="to-buy-chip" *ngIf="getQtyToBuy(item) > 0">{{ getQtyToBuy(item) }} da acquistare</span>
                 <ion-button class="import-btn" fill="clear" size="small" *ngIf="item.collaboratorStockQty > 0"
                   [disabled]="importingStock.has(item.id)"
-                  title="Importa scorta collaboratore ({{ item.collaboratorStockQty }} {{ item.unit }})"
-                  (click)="importCollaboratorStock(item)">+scorta</ion-button>
+                  title="Importa scorta collaboratore"
+                  (click)="importCollaboratorStock(item)">+scorta collab.</ion-button>
               </div>
             </div>
           </div>
@@ -421,8 +418,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                 <ion-checkbox class="shop-check" [checked]="item.isPurchased" (ionChange)="togglePurchased(item)" color="success"></ion-checkbox>
                 <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
                 <ng-container *ngIf="!updatingItem.has(item.id); else spinnerTplExtra">
-                  <span class="item-qty" *ngIf="getQtyToBuy(item) > 0">({{ getQtyToBuy(item) }} {{ item.unit }})</span>
-                  <span class="item-covered" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓ coperto</span>
+                  <span class="item-qty">({{ item.totalQty }} {{ item.unit }})</span>
                 </ng-container>
                 <ng-template #spinnerTplExtra>
                   <ion-spinner name="crescent" class="item-spinner"></ion-spinner>
@@ -434,17 +430,10 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                   <ion-button fill="clear" color="danger" size="small" (click)="deleteExtra(item.id)">
                     <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
                   </ion-button>
-                  <ion-button fill="clear" size="small" class="stock-toggle-btn"
-                    *ngIf="item.stockQty === 0"
-                    [color]="expandedStock.has(item.id) ? 'primary' : 'medium'"
-                    title="Gestisci scorta in casa"
-                    (click)="toggleStockExpand(item.id)">
-                    <ion-icon name="storefront-outline" slot="icon-only"></ion-icon>
-                  </ion-button>
                 </div>
               </div>
-              <!-- Secondary line: stock — when stock present or expanded -->
-              <div class="shop-secondary" *ngIf="item.stockQty > 0 || expandedStock.has(item.id)">
+              <!-- Secondary line: dispensa always visible -->
+              <div class="shop-secondary">
                 <div class="stock-wrap">
                   <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
                   <ion-button fill="clear" size="small" class="stock-btn" color="medium" (click)="stepStock(item, -1)">
@@ -460,6 +449,8 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                     <ion-icon name="add-outline" slot="icon-only"></ion-icon>
                   </ion-button>
                 </div>
+                <span class="item-covered" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓ coperto</span>
+                <span class="to-buy-chip" *ngIf="getQtyToBuy(item) > 0">{{ getQtyToBuy(item) }} da acquistare</span>
               </div>
             </div>
           </div>
@@ -490,7 +481,6 @@ export class ShoppingPage implements OnInit {
   loading = true;
   updatingItem: Set<string> = new Set();
   importingStock: Set<string> = new Set();
-  expandedStock: Set<string> = new Set();
   stockDraft: Record<string, number> = {};
   searchQuery = '';
   hidePurchased = false;
@@ -573,14 +563,6 @@ export class ShoppingPage implements OnInit {
       hash = (hash * 31 + email.charCodeAt(i)) & 0xffffffff;
     }
     return palette[Math.abs(hash) % palette.length];
-  }
-
-  toggleStockExpand(id: string) {
-    if (this.expandedStock.has(id)) {
-      this.expandedStock = new Set([...this.expandedStock].filter(x => x !== id));
-    } else {
-      this.expandedStock = new Set([...this.expandedStock, id]);
-    }
   }
 
   togglePurchased(item: ShoppingItem) {

@@ -216,6 +216,13 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       flex-shrink: 0;
       color: var(--ion-color-medium);
     }
+    .stock-toggle-btn {
+      --padding-start: 4px;
+      --padding-end: 4px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .stock-toggle-btn ion-icon { font-size: 14px; }
 
     /* ── Secondary line: stock + collab import + extra actions ── */
     .shop-secondary {
@@ -356,9 +363,16 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                   <ion-spinner name="crescent" class="item-spinner"></ion-spinner>
                 </ng-template>
                 <span class="collab-badge" *ngFor="let c of item.collaboratorBreakdown" [title]="c.email">{{ getEmailInitial(c.email) }}</span>
+                <ion-button fill="clear" size="small" class="stock-toggle-btn"
+                  *ngIf="item.stockQty === 0 && item.collaboratorStockQty === 0"
+                  [color]="expandedStock.has(item.id) ? 'primary' : 'medium'"
+                  title="Gestisci scorta in casa"
+                  (click)="toggleStockExpand(item.id)">
+                  <ion-icon name="storefront-outline" slot="icon-only"></ion-icon>
+                </ion-button>
               </div>
-              <!-- Secondary line: stock management -->
-              <div class="shop-secondary">
+              <!-- Secondary line: stock management — when stock present, collab stock available, or user tapped storefront -->
+              <div class="shop-secondary" *ngIf="item.stockQty > 0 || item.collaboratorStockQty > 0 || expandedStock.has(item.id)">
                 <div class="stock-wrap">
                   <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
                   <span class="stock-label">Scorta:</span>
@@ -401,10 +415,17 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                   <ion-button fill="clear" color="danger" size="small" (click)="deleteExtra(item.id)">
                     <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
                   </ion-button>
+                  <ion-button fill="clear" size="small" class="stock-toggle-btn"
+                    *ngIf="item.stockQty === 0"
+                    [color]="expandedStock.has(item.id) ? 'primary' : 'medium'"
+                    title="Gestisci scorta in casa"
+                    (click)="toggleStockExpand(item.id)">
+                    <ion-icon name="storefront-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
                 </div>
               </div>
-              <!-- Secondary line: stock -->
-              <div class="shop-secondary">
+              <!-- Secondary line: stock — when stock present or expanded -->
+              <div class="shop-secondary" *ngIf="item.stockQty > 0 || expandedStock.has(item.id)">
                 <div class="stock-wrap">
                   <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
                   <span class="stock-label">Scorta:</span>
@@ -441,6 +462,7 @@ export class ShoppingPage implements OnInit {
   loading = true;
   updatingItem: Set<string> = new Set();
   importingStock: Set<string> = new Set();
+  expandedStock: Set<string> = new Set();
   searchQuery = '';
   hidePurchased = false;
 
@@ -494,6 +516,14 @@ export class ShoppingPage implements OnInit {
 
   getEmailInitial(email: string): string {
     return (email?.split('@')[0]?.[0] ?? '?').toUpperCase();
+  }
+
+  toggleStockExpand(id: string) {
+    if (this.expandedStock.has(id)) {
+      this.expandedStock = new Set([...this.expandedStock].filter(x => x !== id));
+    } else {
+      this.expandedStock = new Set([...this.expandedStock, id]);
+    }
   }
 
   togglePurchased(item: ShoppingItem) {

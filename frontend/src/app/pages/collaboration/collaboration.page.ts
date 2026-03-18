@@ -293,10 +293,10 @@ const STATUS_IT: Record<string, string> = {
 
         <!-- Skeleton -->
         <ng-container *ngIf="loading">
-          <div style="background:white; border-radius:16px; overflow:hidden; box-shadow:var(--app-shadow);">
+          <div style="background:var(--ion-card-background); border-radius:16px; overflow:hidden; box-shadow:var(--app-shadow);">
             <ion-skeleton-text animated style="height:110px; margin:0;"></ion-skeleton-text>
           </div>
-          <div style="background:white; border-radius:16px; overflow:hidden; box-shadow:var(--app-shadow);">
+          <div style="background:var(--ion-card-background); border-radius:16px; overflow:hidden; box-shadow:var(--app-shadow);">
             <ion-skeleton-text animated style="height:64px; margin:0;" *ngFor="let x of [1,2]"></ion-skeleton-text>
           </div>
         </ng-container>
@@ -316,7 +316,7 @@ const STATUS_IT: Record<string, string> = {
                   (keyup.enter)="sendInvite()">
                 </ion-input>
               </div>
-              <ion-button class="send-btn" (click)="sendInvite()" [disabled]="!inviteEmail.trim()">
+              <ion-button class="send-btn" (click)="sendInvite()" [disabled]="!isValidEmail(inviteEmail)">
                 <ion-icon name="send-outline" slot="icon-only"></ion-icon>
               </ion-button>
             </div>
@@ -532,6 +532,10 @@ export class CollaborationPage implements OnInit {
         await this.showToast(e.error?.message || 'Errore revocando invito', 'danger');
       }
     });
+  }
+
+  isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((email || '').trim());
   }
 
   getInitials(email: string): string {

@@ -234,7 +234,6 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       padding: 10px 14px;
       font-size: 0.8rem;
       color: var(--ion-color-medium);
-      font-style: italic;
     }
 
     .skeleton-day {

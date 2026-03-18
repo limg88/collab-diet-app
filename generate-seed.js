@@ -15,40 +15,66 @@ function uuid() {
 function esc(s) { return String(s || '').replace(/'/g, "''"); }
 function q(s)   { return `'${esc(s)}'`; }
 
+// ─── typo corrections (raw lowercase key → corrected display name) ───────────
+const TYPO_FIXES = {
+  'farino di avena':        'Farina di avena',
+  'latte scramato':         'Latte scremato',
+  'dietetic dolcificante':  'Dolcificante dietetico',
+  'uova di gallina intero': 'Uova di gallina intere',
+  'cous cous':              'Couscous',
+  'frutta sotto vuoto':     'Frutta in busta',
+  'minestrone leggerezza':  'Minestrone light',
+  'cereali g galbusera':    'Cereali Galbusera',
+  'biscotti misura privolat': 'Biscotti Misura',
+  'biscotti orosaiwa':      'Biscotti Oro Saiwa',
+  'crackers riso su riso':  'Crackers di riso',
+  'hamburger di soia':      'Burger di soia',
+  'hamburger vegetale':     'Burger vegetale',
+  'hamburger di pollo':     'Burger di pollo',
+  'tonno in scatola al naturale': 'Tonno al naturale',
+};
+
+function fixName(raw) {
+  const lower = raw.toLowerCase().trim();
+  if (TYPO_FIXES[lower]) return TYPO_FIXES[lower];
+  // capitalize first letter only
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
 // ─── category mapping ────────────────────────────────────────────────────────
 const CATEGORIES = {
-  // Cereali e prodotti da forno
-  'biscotti magretti':         'Cereali e prodotti da forno',
-  'biscotti misura privolat':  'Cereali e prodotti da forno',
-  'biscotti orosaiwa':         'Cereali e prodotti da forno',
-  'cereali g galbusera':       'Cereali e prodotti da forno',
-  'cheerios':                  'Cereali e prodotti da forno',
-  'cornflakes':                'Cereali e prodotti da forno',
-  'cous cous':                 'Cereali e prodotti da forno',
-  'crackers riso su riso':     'Cereali e prodotti da forno',
-  'crostini':                  'Cereali e prodotti da forno',
-  'farina di riso':            'Cereali e prodotti da forno',
-  'farino di avena':           'Cereali e prodotti da forno',
-  'fette biscottate':          'Cereali e prodotti da forno',
-  'fiocchi di avena':          'Cereali e prodotti da forno',
-  'fresella':                  'Cereali e prodotti da forno',
-  'pane':                      'Cereali e prodotti da forno',
-  'pane tostato':              'Cereali e prodotti da forno',
-  'pangrattato':               'Cereali e prodotti da forno',
-  'panino':                    'Cereali e prodotti da forno',
-  'panko':                     'Cereali e prodotti da forno',
-  'pasta':                     'Cereali e prodotti da forno',
-  'piadina':                   'Cereali e prodotti da forno',
-  'riso':                      'Cereali e prodotti da forno',
+  // Cereali
+  'biscotti magretti':         'Cereali',
+  'biscotti misura privolat':  'Cereali',
+  'biscotti orosaiwa':         'Cereali',
+  'cereali g galbusera':       'Cereali',
+  'cheerios':                  'Cereali',
+  'cornflakes':                'Cereali',
+  'cous cous':                 'Cereali',
+  'crackers riso su riso':     'Cereali',
+  'crostini':                  'Cereali',
+  'farina di riso':            'Cereali',
+  'farino di avena':           'Cereali',
+  'fette biscottate':          'Cereali',
+  'fiocchi di avena':          'Cereali',
+  'fresella':                  'Cereali',
+  'pane':                      'Cereali',
+  'pane tostato':              'Cereali',
+  'pangrattato':               'Cereali',
+  'panino':                    'Cereali',
+  'panko':                     'Cereali',
+  'pasta':                     'Cereali',
+  'piadina':                   'Cereali',
+  'riso':                      'Cereali',
 
-  // Latticini e yogurt
+  // Latticini
   'bevanda di riso':   'Bevande vegetali',
   'bevanda di soia':   'Bevande vegetali',
-  'fiocchi di latte':  'Latticini e yogurt',
-  'kefir':             'Latticini e yogurt',
-  'latte scramato':    'Latticini e yogurt',
-  'yogurt greco':      'Latticini e yogurt',
-  'yogurt scremato':   'Latticini e yogurt',
+  'fiocchi di latte':  'Latticini',
+  'kefir':             'Latticini',
+  'latte scramato':    'Latticini',
+  'yogurt greco':      'Latticini',
+  'yogurt scremato':   'Latticini',
 
   // Formaggi
   'feta':         'Formaggi',
@@ -87,9 +113,9 @@ const CATEGORIES = {
   'prugne':            'Frutta',
   'uva':               'Frutta',
 
-  // Frutta secca e noci
-  'frutta secca': 'Frutta secca e noci',
-  'noci':         'Frutta secca e noci',
+  // Frutta secca
+  'frutta secca': 'Frutta secca',
+  'noci':         'Frutta secca',
 
   // Verdure
   'bieta':               'Verdure',
@@ -136,40 +162,40 @@ const CATEGORIES = {
   'salsiccia':             'Carne',
   'tacchino':              'Carne',
 
-  // Salumi e affettati
-  'bresaola':         'Salumi e affettati',
-  'fesa di tacchino': 'Salumi e affettati',
-  'prosciutto cotto': 'Salumi e affettati',
-  'prosciutto crudo': 'Salumi e affettati',
+  // Salumi
+  'bresaola':         'Salumi',
+  'fesa di tacchino': 'Salumi',
+  'prosciutto cotto': 'Salumi',
+  'prosciutto crudo': 'Salumi',
 
-  // Pesce e frutti di mare
-  'alici':                       'Pesce e frutti di mare',
-  'bastoncini':                  'Pesce e frutti di mare',
-  'calamaro':                    'Pesce e frutti di mare',
-  'merluzzo':                    'Pesce e frutti di mare',
-  'orata':                       'Pesce e frutti di mare',
-  'persico':                     'Pesce e frutti di mare',
-  'platessa':                    'Pesce e frutti di mare',
-  'polpo':                       'Pesce e frutti di mare',
-  'salmone':                     'Pesce e frutti di mare',
-  'salmone affumicato':          'Pesce e frutti di mare',
-  'seppie':                      'Pesce e frutti di mare',
-  'spigola':                     'Pesce e frutti di mare',
-  'tonno':                       'Pesce e frutti di mare',
-  'tonno in scatola al naturale':'Pesce e frutti di mare',
-  'totano':                      'Pesce e frutti di mare',
+  // Pesce
+  'alici':                       'Pesce',
+  'bastoncini':                  'Pesce',
+  'calamaro':                    'Pesce',
+  'merluzzo':                    'Pesce',
+  'orata':                       'Pesce',
+  'persico':                     'Pesce',
+  'platessa':                    'Pesce',
+  'polpo':                       'Pesce',
+  'salmone':                     'Pesce',
+  'salmone affumicato':          'Pesce',
+  'seppie':                      'Pesce',
+  'spigola':                     'Pesce',
+  'tonno':                       'Pesce',
+  'tonno in scatola al naturale':'Pesce',
+  'totano':                      'Pesce',
 
-  // Condimenti e salse
-  'burro di arachidi':   'Condimenti e salse',
-  'dietetic dolcificante':'Condimenti e salse',
-  'lievito in polvere':  'Condimenti e salse',
-  'marmellata':          'Condimenti e salse',
-  'miele':               'Condimenti e salse',
-  'passata di pomodoro': 'Condimenti e salse',
-  'pesto':               'Condimenti e salse',
+  // Condimenti
+  'burro di arachidi':    'Condimenti',
+  'dietetic dolcificante':'Condimenti',
+  'lievito in polvere':   'Condimenti',
+  'marmellata':           'Condimenti',
+  'miele':                'Condimenti',
+  'passata di pomodoro':  'Condimenti',
+  'pesto':                'Condimenti',
 
-  // Dolci e snack
-  'cioccolato fondente': 'Dolci e snack',
+  // Dolci
+  'cioccolato fondente': 'Dolci',
 
   // Bevande
   'te': 'Bevande',
@@ -313,15 +339,16 @@ lines.push(`  SELECT id INTO v_giovanna_id  FROM users WHERE email = ${q(giovann
 lines.push(``);
 function emitIngredients(userVar, varField) {
   Object.entries(ingredientMap).forEach(([name, entry]) => {
-    const vn  = entry[varField];
-    const cat = getCategory(name);
-    const unit= getDefaultUnit(name);
-    const qty = getDefaultQty(name);
+    const vn          = entry[varField];
+    const displayName = fixName(name);
+    const cat         = getCategory(name);
+    const unit        = getDefaultUnit(name);
+    const qty         = getDefaultQty(name);
     lines.push(`  ${vn} := gen_random_uuid();`);
     lines.push(`  INSERT INTO ingredients (id, "userId", name, category, "defaultUnit", "defaultQty", "createdAt", "updatedAt")`);
-    lines.push(`  SELECT ${vn}, ${userVar}, ${q(name)}, ${q(cat)}, '${unit}', ${qty}, NOW(), NOW()`);
-    lines.push(`  WHERE NOT EXISTS (SELECT 1 FROM ingredients WHERE "userId" = ${userVar} AND lower(name) = lower(${q(name)}));`);
-    lines.push(`  SELECT id INTO ${vn} FROM ingredients WHERE "userId" = ${userVar} AND lower(name) = lower(${q(name)}) LIMIT 1;`);
+    lines.push(`  SELECT ${vn}, ${userVar}, ${q(displayName)}, ${q(cat)}, '${unit}', ${qty}, NOW(), NOW()`);
+    lines.push(`  WHERE NOT EXISTS (SELECT 1 FROM ingredients WHERE "userId" = ${userVar} AND lower(name) = lower(${q(displayName)}));`);
+    lines.push(`  SELECT id INTO ${vn} FROM ingredients WHERE "userId" = ${userVar} AND lower(name) = lower(${q(displayName)}) LIMIT 1;`);
     lines.push(``);
   });
 }

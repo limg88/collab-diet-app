@@ -11,7 +11,7 @@ import {
 import { addIcons } from 'ionicons';
 import { add, trashOutline, refreshOutline, cartOutline, checkmarkCircle,
   storefrontOutline, peopleOutline, pencilOutline, eyeOutline, eyeOffOutline,
-  addOutline, removeOutline } from 'ionicons/icons';
+  addOutline, removeOutline, createOutline } from 'ionicons/icons';
 import { ShoppingService, ShoppingItem } from '../../features/shopping/shopping.service';
 import { Unit } from '../../features/ingredients/ingredients.service';
 
@@ -296,6 +296,12 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       <ion-toolbar>
         <ion-title>Lista della Spesa</ion-title>
         <ion-buttons slot="end">
+          <ion-button fill="clear"
+            [style.--color]="editMode ? 'var(--ion-color-warning)' : 'white'"
+            [title]="editMode ? 'Esci dalla modalità dispensa' : 'Gestisci dispensa'"
+            (click)="editMode = !editMode">
+            <ion-icon name="storefront-outline" slot="icon-only"></ion-icon>
+          </ion-button>
           <ion-button fill="clear" style="--color:white" (click)="loadList()">
             <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
           </ion-button>
@@ -376,8 +382,8 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                   [title]="c.email"
                   [style.background]="getCollabBadgeColor(c.email)">{{ getEmailInitials(c.email) }}</span>
               </div>
-              <!-- Secondary line: dispensa always visible -->
-              <div class="shop-secondary">
+              <!-- Secondary line: dispensa visible in edit mode or when stock > 0 -->
+              <div class="shop-secondary" *ngIf="editMode || item.stockQty > 0 || item.collaboratorStockQty > 0">
                 <div class="stock-wrap">
                   <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
                   <ion-button fill="clear" size="small" class="stock-btn" color="medium" (click)="stepStock(item, -1)">
@@ -432,8 +438,8 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                   </ion-button>
                 </div>
               </div>
-              <!-- Secondary line: dispensa always visible -->
-              <div class="shop-secondary">
+              <!-- Secondary line: dispensa visible in edit mode or when stock > 0 -->
+              <div class="shop-secondary" *ngIf="editMode || item.stockQty > 0 || item.collaboratorStockQty > 0">
                 <div class="stock-wrap">
                   <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
                   <ion-button fill="clear" size="small" class="stock-btn" color="medium" (click)="stepStock(item, -1)">
@@ -484,6 +490,7 @@ export class ShoppingPage implements OnInit {
   stockDraft: Record<string, number> = {};
   searchQuery = '';
   hidePurchased = false;
+  editMode = false;
 
   get filteredItems(): ShoppingItem[] {
     const q = this.searchQuery.toLowerCase().trim();
@@ -506,7 +513,7 @@ export class ShoppingPage implements OnInit {
   ) {
     addIcons({ add, trashOutline, refreshOutline, cartOutline, checkmarkCircle,
       storefrontOutline, peopleOutline, pencilOutline, eyeOutline, eyeOffOutline,
-      addOutline, removeOutline });
+      addOutline, removeOutline, createOutline });
   }
 
   ngOnInit() { this.loadList(); }

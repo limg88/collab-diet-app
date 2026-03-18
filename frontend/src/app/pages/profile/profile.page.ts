@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon,
+  IonContent, IonHeader, IonToolbar, IonTitle, IonButton, IonIcon,
   IonAccordionGroup, IonAccordion, IonItem, IonLabel, IonInput, IonSelect,
   IonSelectOption, IonSkeletonText, IonSpinner,
   ToastController, AlertController
@@ -10,33 +10,23 @@ import {
 import { addIcons } from 'ionicons';
 import {
   personOutline, scaleOutline, bodyOutline, saveOutline, addOutline,
-  chevronDownOutline, timeOutline, trashOutline, checkmarkOutline,
-  fitnessOutline, calendarOutline, barbellOutline
+  checkmarkOutline, chevronDownOutline
 } from 'ionicons/icons';
 import { ProfileService, UserProfile, WeightRecord, BodyMeasurementRecord } from '../../features/profile/profile.service';
 import { AuthService } from '../../core/services/auth.service';
-
-interface MeasField {
-  key: keyof BodyMeasurementRecord;
-  label: string;
-  side?: 'L' | 'R';
-}
 
 @Component({
   selector: 'app-profile',
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon,
+    IonContent, IonHeader, IonToolbar, IonTitle, IonButton, IonIcon,
     IonAccordionGroup, IonAccordion, IonItem, IonLabel, IonInput, IonSelect,
     IonSelectOption, IonSkeletonText, IonSpinner,
   ],
   styles: [`
-    /* ─── Avatar header ─── */
     .profile-hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: flex; flex-direction: column; align-items: center;
       padding: 28px 20px 20px;
       background: linear-gradient(160deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
     }
@@ -47,199 +37,166 @@ interface MeasField {
       margin-bottom: 10px;
     }
     .avatar-circle ion-icon { font-size: 38px; color: white; }
-    .hero-name {
-      font-size: 1.2rem; font-weight: 700; color: white;
-      text-align: center; margin-bottom: 2px;
-    }
+    .hero-name { font-size: 1.15rem; font-weight: 700; color: white; text-align: center; margin-bottom: 2px; }
     .hero-email { font-size: 0.8rem; color: rgba(255,255,255,0.75); text-align: center; }
 
-    /* ─── BMI card ─── */
-    .bmi-row {
-      display: flex; gap: 12px; margin: 16px 14px 0;
-    }
+    .bmi-row { display: flex; gap: 10px; margin: 16px 14px 0; }
     .stat-card {
       flex: 1; background: var(--ion-card-background);
-      border-radius: 14px; padding: 14px 12px;
+      border-radius: 14px; padding: 12px 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-      display: flex; flex-direction: column; align-items: center;
-      gap: 4px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
     }
-    .stat-label {
-      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.8px; color: var(--ion-color-medium);
-    }
-    .stat-value {
-      font-size: 1.5rem; font-weight: 800; color: var(--ion-text-color);
-      line-height: 1;
-    }
-    .stat-unit { font-size: 0.75rem; color: var(--ion-color-medium); font-weight: 500; }
-    .bmi-chip {
-      margin-top: 3px; padding: 2px 10px; border-radius: 20px;
-      font-size: 0.7rem; font-weight: 700;
-    }
+    .stat-label { font-size: 0.63rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ion-color-medium); }
+    .stat-value { font-size: 1.45rem; font-weight: 800; color: var(--ion-text-color); line-height: 1.1; }
+    .stat-unit { font-size: 0.72rem; color: var(--ion-color-medium); }
+    .bmi-chip { margin-top: 2px; padding: 2px 8px; border-radius: 20px; font-size: 0.67rem; font-weight: 700; text-align: center; }
     .bmi-under  { background: rgba(var(--ion-color-warning-rgb),0.15); color: var(--ion-color-warning-shade); }
     .bmi-normal { background: rgba(var(--ion-color-success-rgb),0.15); color: var(--ion-color-success-shade); }
     .bmi-over   { background: rgba(var(--ion-color-danger-rgb),0.15);  color: var(--ion-color-danger-shade); }
 
-    /* ─── Accordion sections ─── */
-    ion-accordion-group {
-      margin: 16px 14px 0;
+    .sections-wrap { margin: 14px 14px 0; display: flex; flex-direction: column; gap: 10px; }
+
+    .section-card {
+      background: var(--ion-card-background);
       border-radius: 14px;
-      overflow: hidden;
       box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      overflow: hidden;
     }
-    ion-accordion { --background: var(--ion-card-background); }
-    ion-accordion ion-item[slot="header"] {
-      --background: var(--ion-card-background);
-      --border-width: 0;
+    .section-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      user-select: none;
+      border-bottom: 1px solid var(--ion-border-color);
     }
-    ion-accordion .section-header-icon {
-      font-size: 20px; margin-right: 10px; color: var(--ion-color-primary);
+    .section-header ion-icon { font-size: 20px; color: var(--ion-color-primary); flex-shrink: 0; }
+    .section-header-title { flex: 1; font-weight: 700; font-size: 0.95rem; }
+    .section-chevron {
+      font-size: 14px; color: var(--ion-color-medium);
+      transition: transform 0.2s;
     }
-    .section-content { padding: 0 14px 16px; }
+    .section-chevron.open { transform: rotate(180deg); }
+    .section-body { padding: 14px 14px 16px; }
 
-    /* ─── Form rows ─── */
-    .form-row {
-      display: flex; gap: 10px; margin-bottom: 12px;
-    }
-    .form-field {
-      flex: 1; display: flex; flex-direction: column; gap: 4px;
-    }
     .field-label {
-      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.6px; color: var(--ion-color-medium); padding-left: 2px;
-    }
-    .field-input {
-      background: var(--ion-color-light); border-radius: 10px;
-      --padding-start: 10px; --padding-end: 10px;
-      --padding-top: 10px; --padding-bottom: 10px;
-      font-size: 0.9rem;
-    }
-    .field-select {
-      background: var(--ion-color-light); border-radius: 10px;
-      padding: 10px; font-size: 0.9rem; width: 100%;
-      --padding-start: 10px;
-    }
-    .save-btn { margin-top: 8px; width: 100%; }
-
-    /* ─── Weight entry ─── */
-    .weight-entry {
-      display: flex; gap: 10px; align-items: flex-end; margin-bottom: 12px;
-    }
-    .weight-entry .form-field { flex: 1; }
-    .weight-entry ion-button { height: 42px; flex-shrink: 0; margin-bottom: 0; }
-
-    /* ─── History list ─── */
-    .history-section-title {
       font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--ion-color-medium);
+      margin-bottom: 4px; padding-left: 2px;
+    }
+    .field-wrap {
+      background: var(--ion-color-light);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .field-wrap ion-input {
+      --padding-start: 12px; --padding-end: 12px;
+      --padding-top: 10px; --padding-bottom: 10px;
+      font-size: 0.92rem;
+    }
+    .field-wrap ion-select {
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      width: 100%;
+    }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-col { flex: 1; min-width: 0; }
+
+    .inline-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; }
+    .inline-row .field-wrap { flex: 1; margin-bottom: 0; }
+    .inline-row ion-button { height: 42px; flex-shrink: 0; }
+
+    .full-btn { width: 100%; margin-top: 4px; }
+
+    .divider {
+      font-size: 0.67rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.8px; color: var(--ion-color-medium);
-      padding: 8px 0 6px; border-top: 1px solid var(--ion-border-color); margin-top: 4px;
+      border-top: 1px solid var(--ion-border-color);
+      padding: 10px 0 6px; margin: 8px 0 6px;
     }
     .history-list { display: flex; flex-direction: column; gap: 6px; }
     .history-item {
-      display: flex; align-items: center;
-      background: var(--ion-color-light); border-radius: 10px;
-      padding: 8px 12px; gap: 10px;
+      display: flex; align-items: center; gap: 10px;
+      background: var(--ion-color-light); border-radius: 10px; padding: 8px 12px;
     }
-    .history-value {
-      font-weight: 700; font-size: 0.95rem; color: var(--ion-text-color); flex: 1;
-    }
-    .history-date { font-size: 0.72rem; color: var(--ion-color-medium); }
-    .history-empty {
-      font-size: 0.82rem; color: var(--ion-color-medium);
-      text-align: center; padding: 10px 0; font-style: italic;
-    }
+    .history-val { font-weight: 700; font-size: 0.95rem; flex: 1; }
+    .history-date { font-size: 0.7rem; color: var(--ion-color-medium); }
+    .empty-msg { font-size: 0.82rem; color: var(--ion-color-medium); text-align: center; padding: 8px 0; font-style: italic; }
 
-    /* ─── Body measurements visual ─── */
-    .body-visual {
+    /* ── Body measurements visual ── */
+    .meas-hint { text-align: center; font-size: 0.72rem; color: var(--ion-color-medium); font-style: italic; margin-bottom: 10px; }
+    .body-canvas {
       position: relative;
-      margin: 8px auto 16px;
-      width: 100%; max-width: 360px;
-      min-height: 480px;
-      display: flex; align-items: center; justify-content: center;
+      width: 100%;
+      height: 500px;
+      margin-bottom: 14px;
     }
-    .body-silhouette {
+    .sil-wrap {
       position: absolute;
-      left: 50%; top: 0;
-      transform: translateX(-50%);
-      width: 120px; height: 480px;
-      opacity: 0.18;
+      left: 50%; transform: translateX(-50%);
+      top: 0; width: 100px; height: 500px;
+      opacity: 0.13;
     }
-    /* silhouette via CSS */
-    .body-silhouette-shape {
-      position: absolute; left: 50%; transform: translateX(-50%);
-      background: var(--ion-color-primary);
-    }
-    .sil-head   { width: 44px; height: 44px; border-radius: 50%; top: 0px; }
-    .sil-neck   { width: 20px; height: 20px; top: 40px; }
-    .sil-torso  { width: 72px; height: 160px; top: 56px; border-radius: 8px 8px 14px 14px; }
-    .sil-hips   { width: 80px; height: 48px; top: 208px; border-radius: 4px 4px 14px 14px; }
-    .sil-leg-l  { width: 30px; height: 140px; top: 250px; left: calc(50% - 38px); transform: none; border-radius: 4px 4px 10px 10px; }
-    .sil-leg-r  { width: 30px; height: 140px; top: 250px; left: calc(50% + 8px);  transform: none; border-radius: 4px 4px 10px 10px; }
-    .sil-arm-l  { width: 22px; height: 130px; top: 60px; left: calc(50% - 60px); transform: none; border-radius: 6px 6px 10px 10px; }
-    .sil-arm-r  { width: 22px; height: 130px; top: 60px; left: calc(50% + 38px);  transform: none; border-radius: 6px 6px 10px 10px; }
+    .sil { position: absolute; background: var(--ion-color-primary); left: 50%; transform: translateX(-50%); }
+    .sil-head   { width: 40px; height: 40px; border-radius: 50%; top: 0; }
+    .sil-neck   { width: 18px; height: 18px; top: 37px; }
+    .sil-torso  { width: 68px; height: 155px; top: 52px; border-radius: 8px 8px 14px 14px; }
+    .sil-hips   { width: 78px; height: 46px; top: 200px; border-radius: 4px 4px 14px 14px; }
+    .sil-leg-l  { width: 29px; height: 140px; top: 242px; left: calc(50% - 34px); transform: none; border-radius: 4px 4px 10px 10px; }
+    .sil-leg-r  { width: 29px; height: 140px; top: 242px; left: calc(50% + 5px);  transform: none; border-radius: 4px 4px 10px 10px; }
+    .sil-arm-l  { width: 20px; height: 125px; top: 56px; left: calc(50% - 52px); transform: none; border-radius: 6px 6px 10px 10px; }
+    .sil-arm-r  { width: 20px; height: 125px; top: 56px; left: calc(50% + 32px); transform: none; border-radius: 6px 6px 10px 10px; }
 
-    .meas-grid {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      pointer-events: none;
-    }
-    /* measurement chip — positioned absolutely */
-    .meas-chip {
+    .chip {
       position: absolute;
-      pointer-events: all;
       background: var(--ion-card-background);
       border: 1.5px solid var(--ion-border-color);
       border-radius: 8px;
-      padding: 4px 8px;
-      min-width: 68px;
+      padding: 5px 8px;
+      min-width: 72px;
+      max-width: 90px;
       box-shadow: 0 1px 5px rgba(0,0,0,0.1);
       cursor: pointer;
     }
-    .meas-chip:active { background: var(--ion-color-light); }
-    .meas-chip-label { font-size: 0.62rem; color: var(--ion-color-medium); font-weight: 600; }
-    .meas-chip-side { font-size: 0.6rem; font-weight: 700; }
-    .meas-chip-side.L { color: var(--ion-color-primary); }
-    .meas-chip-side.R { color: var(--ion-color-danger); }
-    .meas-chip-value { font-size: 0.82rem; font-weight: 700; color: var(--ion-text-color); }
-    .meas-chip-value.zero { color: var(--ion-color-medium); }
-    .meas-connector {
-      position: absolute; background: var(--ion-border-color); height: 1px;
-    }
+    .chip:active { opacity: 0.7; }
+    .chip-name-row { display: flex; align-items: center; gap: 2px; }
+    .chip-name { font-size: 0.6rem; color: var(--ion-color-medium); font-weight: 600; }
+    .chip-side-L { font-size: 0.58rem; font-weight: 800; color: var(--ion-color-primary); }
+    .chip-side-R { font-size: 0.58rem; font-weight: 800; color: var(--ion-color-danger); }
+    .chip-val { font-size: 0.84rem; font-weight: 700; color: var(--ion-text-color); }
+    .chip-val.empty { color: var(--ion-color-medium); }
 
-    /* positions — left side */
-    .chip-collo   { top: 28px;  left: 55%; }
-    .chip-spalle  { top: 78px;  left: 4%;  }
-    .chip-petto   { top: 120px; left: 55%; }
-    .chip-braccioL { top: 100px; left: 4%; }
-    .chip-braccioR { top: 100px; left: 55%; }
-    .chip-vita    { top: 175px; left: 4%;  }
-    .chip-fianchi { top: 220px; left: 55%; }
-    .chip-cosciaL { top: 295px; left: 4%;  }
-    .chip-cosciaR { top: 295px; left: 55%; }
-    .chip-polpaccioL { top: 375px; left: 4%;  }
-    .chip-polpaccioR { top: 375px; left: 55%; }
+    /* right side: left:55% — left side: right:55% */
+    .c-L { right: 55%; text-align: right; }
+    .c-R { left: 55%; }
+    .c-C { left: 50%; transform: translateX(-50%); }
 
-    .visual-hint {
-      text-align: center; font-size: 0.72rem; color: var(--ion-color-medium);
-      padding-bottom: 8px; font-style: italic;
-    }
+    .c-collo   { top: 6px; }
+    .c-spalle  { top: 60px; }
+    .c-petto   { top: 106px; }
+    .c-braccioL { top: 126px; }
+    .c-braccioR { top: 155px; }
+    .c-vita    { top: 190px; }
+    .c-fianchi { top: 220px; }
+    .c-cosciaL { top: 285px; }
+    .c-cosciaR { top: 285px; }
+    .c-polpaccioL { top: 370px; }
+    .c-polpaccioR { top: 370px; }
 
-    /* ─── Latest measurements table ─── */
-    .meas-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-    .meas-table th {
-      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.6px; color: var(--ion-color-medium);
-      text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--ion-border-color);
+    /* measurements history table */
+    .mh-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 4px; }
+    .mh-table th {
+      font-size: 0.63rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--ion-color-medium); text-align: left; padding: 4px 5px;
+      border-bottom: 1px solid var(--ion-border-color);
     }
-    .meas-table td {
-      font-size: 0.82rem; padding: 5px 6px;
-      border-bottom: 1px solid rgba(0,0,0,0.04);
-    }
-    .meas-table td.val { font-weight: 700; }
-    .meas-table tr:last-child td { border-bottom: none; }
-    .meas-table .date-col { color: var(--ion-color-medium); font-size: 0.72rem; }
+    .mh-table td { padding: 5px 5px; border-bottom: 1px solid rgba(0,0,0,0.04); }
+    .mh-table tr:last-child td { border-bottom: none; }
+    .mh-table .dc { color: var(--ion-color-medium); font-size: 0.7rem; }
+    .mh-table .vc { font-weight: 700; }
 
-    .spacer { height: 24px; }
+    .spacer { height: 28px; }
   `],
   template: `
     <ion-header>
@@ -259,98 +216,139 @@ interface MeasField {
         <div class="hero-email">{{ userEmail }}</div>
       </div>
 
-      <!-- BMI / stat cards -->
-      <div class="bmi-row" *ngIf="!loading">
-        <div class="stat-card">
-          <span class="stat-label">Peso</span>
-          <span class="stat-value">{{ latestWeight ?? '—' }}</span>
-          <span class="stat-unit">kg</span>
+      <!-- Stat cards -->
+      <ng-container *ngIf="!loading">
+        <div class="bmi-row">
+          <div class="stat-card">
+            <span class="stat-label">Peso</span>
+            <span class="stat-value">{{ latestWeight != null ? (latestWeight | number:'1.1-1') : '—' }}</span>
+            <span class="stat-unit">kg</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Altezza</span>
+            <span class="stat-value">{{ profile?.heightCm ? (profile!.heightCm | number:'1.0-0') : '—' }}</span>
+            <span class="stat-unit">cm</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">BMI</span>
+            <span class="stat-value">{{ bmiValue ?? '—' }}</span>
+            <div [class]="'bmi-chip ' + bmiClass" *ngIf="bmiValue">{{ bmiLabel }}</div>
+          </div>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Altezza</span>
-          <span class="stat-value">{{ profile?.heightCm ?? '—' }}</span>
-          <span class="stat-unit">cm</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">BMI</span>
-          <span class="stat-value">{{ bmiValue ?? '—' }}</span>
-          <div [class]="'bmi-chip ' + bmiClass" *ngIf="bmiValue">{{ bmiLabel }}</div>
-        </div>
-      </div>
+      </ng-container>
 
       <!-- Skeleton -->
-      <div style="margin:16px 14px 0;" *ngIf="loading">
-        <ion-skeleton-text animated style="height:80px; border-radius:14px;"></ion-skeleton-text>
+      <div style="margin:16px 14px 0; display:flex; flex-direction:column; gap:10px;" *ngIf="loading">
+        <ion-skeleton-text animated style="height:72px; border-radius:14px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="height:48px; border-radius:14px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="height:48px; border-radius:14px;"></ion-skeleton-text>
       </div>
 
-      <!-- ════ ACCORDION ════ -->
-      <ion-accordion-group *ngIf="!loading" [multiple]="true" [value]="['personal']">
+      <!-- Sections -->
+      <div class="sections-wrap" *ngIf="!loading">
 
-        <!-- ── 1. Dati personali ── -->
-        <ion-accordion value="personal">
-          <ion-item slot="header">
-            <ion-icon name="person-outline" class="section-header-icon" slot="start"></ion-icon>
-            <ion-label><b>Dati personali</b></ion-label>
-          </ion-item>
-          <div slot="content" class="section-content">
+        <!-- ─── 1. Dati personali ─── -->
+        <div class="section-card">
+          <div class="section-header" (click)="openPersonal = !openPersonal">
+            <ion-icon name="person-outline"></ion-icon>
+            <span class="section-header-title">Dati personali</span>
+            <ion-icon name="chevron-down-outline" class="section-chevron" [class.open]="openPersonal"></ion-icon>
+          </div>
+          <div class="section-body" *ngIf="openPersonal">
             <div class="form-row">
-              <div class="form-field">
+              <div class="form-col">
                 <div class="field-label">Nome</div>
-                <ion-input class="field-input" [(ngModel)]="draftPersonal.firstName" placeholder="Nome"></ion-input>
+                <div class="field-wrap">
+                  <ion-input
+                    [value]="draftPersonal.firstName"
+                    (ionInput)="draftPersonal.firstName = $event.detail.value ?? ''"
+                    placeholder="Nome">
+                  </ion-input>
+                </div>
               </div>
-              <div class="form-field">
+              <div class="form-col">
                 <div class="field-label">Cognome</div>
-                <ion-input class="field-input" [(ngModel)]="draftPersonal.lastName" placeholder="Cognome"></ion-input>
+                <div class="field-wrap">
+                  <ion-input
+                    [value]="draftPersonal.lastName"
+                    (ionInput)="draftPersonal.lastName = $event.detail.value ?? ''"
+                    placeholder="Cognome">
+                  </ion-input>
+                </div>
               </div>
             </div>
             <div class="form-row">
-              <div class="form-field">
+              <div class="form-col">
                 <div class="field-label">Data di nascita</div>
-                <ion-input class="field-input" type="date" [(ngModel)]="draftPersonal.birthDate"></ion-input>
+                <div class="field-wrap">
+                  <ion-input
+                    type="date"
+                    [value]="draftPersonal.birthDate"
+                    (ionChange)="draftPersonal.birthDate = $event.detail.value ?? ''">
+                  </ion-input>
+                </div>
               </div>
-              <div class="form-field">
+              <div class="form-col">
                 <div class="field-label">Genere</div>
-                <ion-select class="field-select" [(ngModel)]="draftPersonal.gender" placeholder="Seleziona">
-                  <ion-select-option value="M">Maschio</ion-select-option>
-                  <ion-select-option value="F">Femmina</ion-select-option>
-                  <ion-select-option value="OTHER">Altro</ion-select-option>
-                </ion-select>
+                <div class="field-wrap">
+                  <ion-select
+                    [(ngModel)]="draftPersonal.gender"
+                    placeholder="Seleziona"
+                    interface="action-sheet">
+                    <ion-select-option value="M">Maschio</ion-select-option>
+                    <ion-select-option value="F">Femmina</ion-select-option>
+                    <ion-select-option value="OTHER">Altro</ion-select-option>
+                  </ion-select>
+                </div>
               </div>
             </div>
-            <ion-button class="save-btn" expand="block" (click)="savePersonal()" [disabled]="savingPersonal">
+            <ion-button class="full-btn" expand="block" (click)="savePersonal()" [disabled]="savingPersonal">
               <ion-spinner *ngIf="savingPersonal" name="crescent" slot="start" style="width:16px;height:16px;margin-right:6px;"></ion-spinner>
               <ion-icon *ngIf="!savingPersonal" name="save-outline" slot="start"></ion-icon>
               Salva dati personali
             </ion-button>
           </div>
-        </ion-accordion>
+        </div>
 
-        <!-- ── 2. Peso e altezza ── -->
-        <ion-accordion value="body">
-          <ion-item slot="header">
-            <ion-icon name="scale-outline" class="section-header-icon" slot="start"></ion-icon>
-            <ion-label><b>Peso e altezza</b></ion-label>
-          </ion-item>
-          <div slot="content" class="section-content">
-            <!-- Height -->
-            <div class="form-row" style="margin-bottom:16px;">
-              <div class="form-field">
-                <div class="field-label">Altezza (cm)</div>
-                <ion-input class="field-input" type="number" [(ngModel)]="draftHeight" placeholder="es. 175" min="50" max="250"></ion-input>
+        <!-- ─── 2. Peso e altezza ─── -->
+        <div class="section-card">
+          <div class="section-header" (click)="openBody = !openBody">
+            <ion-icon name="scale-outline"></ion-icon>
+            <span class="section-header-title">Peso e altezza</span>
+            <ion-icon name="chevron-down-outline" class="section-chevron" [class.open]="openBody"></ion-icon>
+          </div>
+          <div class="section-body" *ngIf="openBody">
+
+            <!-- Altezza -->
+            <div class="field-label">Altezza (cm)</div>
+            <div class="inline-row">
+              <div class="field-wrap">
+                <ion-input
+                  type="number"
+                  inputmode="decimal"
+                  placeholder="es. 175"
+                  [value]="draftHeight ?? ''"
+                  (ionInput)="draftHeight = toNum($event.detail.value)">
+                </ion-input>
               </div>
-              <div style="display:flex;align-items:flex-end;">
-                <ion-button (click)="saveHeight()" [disabled]="savingHeight" style="height:42px;margin-bottom:0;">
-                  <ion-spinner *ngIf="savingHeight" name="crescent" style="width:14px;height:14px;"></ion-spinner>
-                  <ion-icon *ngIf="!savingHeight" name="save-outline" slot="icon-only"></ion-icon>
-                </ion-button>
-              </div>
+              <ion-button (click)="saveHeight()" [disabled]="savingHeight" style="height:42px;">
+                <ion-spinner *ngIf="savingHeight" name="crescent" style="width:14px;height:14px;"></ion-spinner>
+                <ion-icon *ngIf="!savingHeight" name="save-outline" slot="icon-only"></ion-icon>
+              </ion-button>
             </div>
 
-            <!-- New weight entry -->
-            <div class="field-label" style="margin-bottom:6px;">Aggiungi peso</div>
-            <div class="weight-entry">
-              <div class="form-field">
-                <ion-input class="field-input" type="number" [(ngModel)]="newWeightKg" placeholder="kg" min="20" max="300" step="0.1"></ion-input>
+            <!-- Peso -->
+            <div class="field-label">Registra peso</div>
+            <div class="inline-row">
+              <div class="field-wrap">
+                <ion-input
+                  type="number"
+                  inputmode="decimal"
+                  placeholder="kg"
+                  step="0.1"
+                  [value]="newWeightInput"
+                  (ionInput)="newWeightInput = $event.detail.value ?? ''">
+                </ion-input>
               </div>
               <ion-button (click)="addWeight()" [disabled]="savingWeight">
                 <ion-spinner *ngIf="savingWeight" name="crescent" style="width:14px;height:14px;"></ion-spinner>
@@ -359,172 +357,149 @@ interface MeasField {
               </ion-button>
             </div>
 
-            <!-- Weight history -->
-            <div class="history-section-title">Storico pesi</div>
+            <!-- Storico pesi -->
+            <div class="divider">Storico pesi</div>
+            <div class="empty-msg" *ngIf="weightHistory.length === 0">Nessun dato registrato</div>
             <div class="history-list">
-              <div class="history-empty" *ngIf="weightHistory.length === 0">Nessun dato registrato</div>
               <div class="history-item" *ngFor="let w of weightHistory">
-                <ion-icon name="scale-outline" style="font-size:16px;color:var(--ion-color-primary);flex-shrink:0;"></ion-icon>
-                <span class="history-value">{{ w.weightKg | number:'1.1-1' }} kg</span>
+                <ion-icon name="scale-outline" style="font-size:15px;color:var(--ion-color-primary);flex-shrink:0;"></ion-icon>
+                <span class="history-val">{{ w.weightKg | number:'1.1-1' }} kg</span>
                 <span class="history-date">{{ w.recordedAt | date:'dd/MM/yyyy HH:mm' }}</span>
               </div>
             </div>
           </div>
-        </ion-accordion>
+        </div>
 
-        <!-- ── 3. Misure corporee ── -->
-        <ion-accordion value="measurements">
-          <ion-item slot="header">
-            <ion-icon name="body-outline" class="section-header-icon" slot="start"></ion-icon>
-            <ion-label><b>Misure corporee</b></ion-label>
-          </ion-item>
-          <div slot="content" class="section-content">
+        <!-- ─── 3. Misure corporee ─── -->
+        <div class="section-card">
+          <div class="section-header" (click)="openMeasurements = !openMeasurements">
+            <ion-icon name="body-outline"></ion-icon>
+            <span class="section-header-title">Misure corporee</span>
+            <ion-icon name="chevron-down-outline" class="section-chevron" [class.open]="openMeasurements"></ion-icon>
+          </div>
+          <div class="section-body" *ngIf="openMeasurements">
 
-            <div class="visual-hint">Tocca una misura per modificarla</div>
+            <div class="meas-hint">Tocca una misura per modificarla, poi premi "Salva misure"</div>
 
-            <!-- Body visual with measurement chips -->
-            <div class="body-visual">
+            <!-- Body canvas -->
+            <div class="body-canvas">
               <!-- Silhouette -->
-              <div style="position:absolute;left:50%;transform:translateX(-50%);top:0;width:120px;height:480px;">
-                <div class="body-silhouette-shape sil-head"></div>
-                <div class="body-silhouette-shape sil-neck"></div>
-                <div class="body-silhouette-shape sil-torso"></div>
-                <div class="body-silhouette-shape sil-hips"></div>
-                <div class="body-silhouette-shape sil-leg-l"></div>
-                <div class="body-silhouette-shape sil-leg-r"></div>
-                <div class="body-silhouette-shape sil-arm-l"></div>
-                <div class="body-silhouette-shape sil-arm-r"></div>
+              <div class="sil-wrap">
+                <div class="sil sil-head"></div>
+                <div class="sil sil-neck"></div>
+                <div class="sil sil-torso"></div>
+                <div class="sil sil-hips"></div>
+                <div class="sil sil-leg-l"></div>
+                <div class="sil sil-leg-r"></div>
+                <div class="sil sil-arm-l"></div>
+                <div class="sil sil-arm-r"></div>
               </div>
 
-              <!-- Measurement chips -->
-              <div class="meas-grid">
-                <div class="meas-chip chip-collo"   (click)="editMeasurement('collo', 'Collo')">
-                  <div class="meas-chip-label">Collo</div>
-                  <div class="meas-chip-value" [class.zero]="!measDraft.collo">{{ measDraft.collo ? (measDraft.collo + 'cm') : '—' }}</div>
-                </div>
-                <div class="meas-chip chip-spalle"  (click)="editMeasurement('spalle', 'Spalle')">
-                  <div class="meas-chip-label">Spalle</div>
-                  <div class="meas-chip-value" [class.zero]="!measDraft.spalle">{{ measDraft.spalle ? (measDraft.spalle + 'cm') : '—' }}</div>
-                </div>
-                <div class="meas-chip chip-petto"   (click)="editMeasurement('petto', 'Petto')">
-                  <div class="meas-chip-label">Petto</div>
-                  <div class="meas-chip-value" [class.zero]="!measDraft.petto">{{ measDraft.petto ? (measDraft.petto + 'cm') : '—' }}</div>
-                </div>
-                <div class="meas-chip chip-braccioL" (click)="editMeasurement('braccioL', 'Braccio')">
-                  <div style="display:flex;align-items:center;gap:3px;">
-                    <span class="meas-chip-label">Braccio</span>
-                    <span class="meas-chip-side L">L</span>
-                  </div>
-                  <div class="meas-chip-value" [class.zero]="!measDraft.braccioL">{{ measDraft.braccioL ? (measDraft.braccioL + 'cm') : '—' }}</div>
-                </div>
-                <div class="meas-chip chip-braccioR" (click)="editMeasurement('braccioR', 'Braccio')">
-                  <div style="display:flex;align-items:center;gap:3px;">
-                    <span class="meas-chip-label">Braccio</span>
-                    <span class="meas-chip-side R">R</span>
-                  </div>
-                  <div class="meas-chip-value" [class.zero]="!measDraft.braccioR">{{ measDraft.braccioR ? (measDraft.braccioR + 'cm') : '—' }}</div>
-                </div>
-                <div class="meas-chip chip-vita"    (click)="editMeasurement('vita', 'Vita')">
-                  <div class="meas-chip-label">Vita</div>
-                  <div class="meas-chip-value" [class.zero]="!measDraft.vita">{{ measDraft.vita ? (measDraft.vita + 'cm') : '—' }}</div>
-                </div>
-                <div class="meas-chip chip-fianchi" (click)="editMeasurement('fianchi', 'Fianchi')">
-                  <div class="meas-chip-label">Fianchi</div>
-                  <div class="meas-chip-value" [class.zero]="!measDraft.fianchi">{{ measDraft.fianchi ? (measDraft.fianchi + 'cm') : '—' }}</div>
-                </div>
-                <div class="meas-chip chip-cosciaL" (click)="editMeasurement('cosciaL', 'Coscia')">
-                  <div style="display:flex;align-items:center;gap:3px;">
-                    <span class="meas-chip-label">Coscia</span>
-                    <span class="meas-chip-side L">L</span>
-                  </div>
-                  <div class="meas-chip-value" [class.zero]="!measDraft.cosciaL">{{ measDraft.cosciaL ? (measDraft.cosciaL + 'cm') : '—' }}</div>
-                </div>
-                <div class="meas-chip chip-cosciaR" (click)="editMeasurement('cosciaR', 'Coscia')">
-                  <div style="display:flex;align-items:center;gap:3px;">
-                    <span class="meas-chip-label">Coscia</span>
-                    <span class="meas-chip-side R">R</span>
-                  </div>
-                  <div class="meas-chip-value" [class.zero]="!measDraft.cosciaR">{{ measDraft.cosciaR ? (measDraft.cosciaR + 'cm') : '—' }}</div>
-                </div>
-                <div class="meas-chip chip-polpaccioL" (click)="editMeasurement('polpaccioL', 'Polpaccio')">
-                  <div style="display:flex;align-items:center;gap:3px;">
-                    <span class="meas-chip-label">Polpaccio</span>
-                    <span class="meas-chip-side L">L</span>
-                  </div>
-                  <div class="meas-chip-value" [class.zero]="!measDraft.polpaccioL">{{ measDraft.polpaccioL ? (measDraft.polpaccioL + 'cm') : '—' }}</div>
-                </div>
-                <div class="meas-chip chip-polpaccioR" (click)="editMeasurement('polpaccioR', 'Polpaccio')">
-                  <div style="display:flex;align-items:center;gap:3px;">
-                    <span class="meas-chip-label">Polpaccio</span>
-                    <span class="meas-chip-side R">R</span>
-                  </div>
-                  <div class="meas-chip-value" [class.zero]="!measDraft.polpaccioR">{{ measDraft.polpaccioR ? (measDraft.polpaccioR + 'cm') : '—' }}</div>
-                </div>
+              <!-- Chips — left side (c-L = right:55%) -->
+              <div class="chip c-L c-spalle" (click)="editMeas('spalle', 'Spalle')">
+                <div class="chip-name-row"><span class="chip-name">Spalle</span></div>
+                <div class="chip-val" [class.empty]="!measDraft['spalle']">{{ fmtMeas('spalle') }}</div>
+              </div>
+              <div class="chip c-L c-braccioL" (click)="editMeas('braccioL', 'Braccio')">
+                <div class="chip-name-row"><span class="chip-name">Braccio</span><span class="chip-side-L">&nbsp;L</span></div>
+                <div class="chip-val" [class.empty]="!measDraft['braccioL']">{{ fmtMeas('braccioL') }}</div>
+              </div>
+              <div class="chip c-L c-vita" (click)="editMeas('vita', 'Vita')">
+                <div class="chip-name-row"><span class="chip-name">Vita</span></div>
+                <div class="chip-val" [class.empty]="!measDraft['vita']">{{ fmtMeas('vita') }}</div>
+              </div>
+              <div class="chip c-L c-cosciaL" (click)="editMeas('cosciaL', 'Coscia')">
+                <div class="chip-name-row"><span class="chip-name">Coscia</span><span class="chip-side-L">&nbsp;L</span></div>
+                <div class="chip-val" [class.empty]="!measDraft['cosciaL']">{{ fmtMeas('cosciaL') }}</div>
+              </div>
+              <div class="chip c-L c-polpaccioL" (click)="editMeas('polpaccioL', 'Polpaccio')">
+                <div class="chip-name-row"><span class="chip-name">Polpaccio</span><span class="chip-side-L">&nbsp;L</span></div>
+                <div class="chip-val" [class.empty]="!measDraft['polpaccioL']">{{ fmtMeas('polpaccioL') }}</div>
+              </div>
+
+              <!-- Chips — center-right (c-C) -->
+              <div class="chip c-C c-collo" (click)="editMeas('collo', 'Collo')" style="left:auto;right:0;transform:none;left:55%;">
+                <div class="chip-name-row"><span class="chip-name">Collo</span></div>
+                <div class="chip-val" [class.empty]="!measDraft['collo']">{{ fmtMeas('collo') }}</div>
+              </div>
+
+              <!-- Chips — right side (c-R = left:55%) -->
+              <div class="chip c-R c-petto" (click)="editMeas('petto', 'Petto')">
+                <div class="chip-name-row"><span class="chip-name">Petto</span></div>
+                <div class="chip-val" [class.empty]="!measDraft['petto']">{{ fmtMeas('petto') }}</div>
+              </div>
+              <div class="chip c-R c-braccioR" (click)="editMeas('braccioR', 'Braccio')">
+                <div class="chip-name-row"><span class="chip-name">Braccio</span><span class="chip-side-R">&nbsp;R</span></div>
+                <div class="chip-val" [class.empty]="!measDraft['braccioR']">{{ fmtMeas('braccioR') }}</div>
+              </div>
+              <div class="chip c-R c-fianchi" (click)="editMeas('fianchi', 'Fianchi')">
+                <div class="chip-name-row"><span class="chip-name">Fianchi</span></div>
+                <div class="chip-val" [class.empty]="!measDraft['fianchi']">{{ fmtMeas('fianchi') }}</div>
+              </div>
+              <div class="chip c-R c-cosciaR" (click)="editMeas('cosciaR', 'Coscia')">
+                <div class="chip-name-row"><span class="chip-name">Coscia</span><span class="chip-side-R">&nbsp;R</span></div>
+                <div class="chip-val" [class.empty]="!measDraft['cosciaR']">{{ fmtMeas('cosciaR') }}</div>
+              </div>
+              <div class="chip c-R c-polpaccioR" (click)="editMeas('polpaccioR', 'Polpaccio')">
+                <div class="chip-name-row"><span class="chip-name">Polpaccio</span><span class="chip-side-R">&nbsp;R</span></div>
+                <div class="chip-val" [class.empty]="!measDraft['polpaccioR']">{{ fmtMeas('polpaccioR') }}</div>
               </div>
             </div>
 
-            <!-- Save all measurements -->
-            <ion-button class="save-btn" expand="block" color="primary" (click)="saveMeasurements()" [disabled]="savingMeasurements">
+            <ion-button class="full-btn" expand="block" (click)="saveMeasurements()" [disabled]="savingMeasurements">
               <ion-spinner *ngIf="savingMeasurements" name="crescent" slot="start" style="width:16px;height:16px;margin-right:6px;"></ion-spinner>
               <ion-icon *ngIf="!savingMeasurements" name="checkmark-outline" slot="start"></ion-icon>
               Salva misure
             </ion-button>
 
             <!-- Measurements history -->
-            <div class="history-section-title" style="margin-top:16px;">Storico misure</div>
-            <div class="history-empty" *ngIf="measurementsHistory.length === 0">Nessuna misura registrata</div>
-
-            <div *ngIf="measurementsHistory.length > 0">
-              <table class="meas-table">
+            <div class="divider" style="margin-top:16px;">Storico misure</div>
+            <div class="empty-msg" *ngIf="measurementsHistory.length === 0">Nessuna misura registrata</div>
+            <ng-container *ngIf="measurementsHistory.length > 0">
+              <table class="mh-table">
                 <thead>
                   <tr>
-                    <th>Data</th>
-                    <th>Vita</th>
-                    <th>Fianchi</th>
-                    <th>Petto</th>
+                    <th>Data</th><th>Vita</th><th>Fianchi</th><th>Petto</th><th>Collo</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr *ngFor="let m of measurementsHistory">
-                    <td class="date-col">{{ m.recordedAt | date:'dd/MM/yy' }}</td>
-                    <td class="val">{{ m.vita ? (m.vita + 'cm') : '—' }}</td>
-                    <td class="val">{{ m.fianchi ? (m.fianchi + 'cm') : '—' }}</td>
-                    <td class="val">{{ m.petto ? (m.petto + 'cm') : '—' }}</td>
+                    <td class="dc">{{ m.recordedAt | date:'dd/MM/yy' }}</td>
+                    <td class="vc">{{ m.vita ? (m.vita + 'cm') : '—' }}</td>
+                    <td class="vc">{{ m.fianchi ? (m.fianchi + 'cm') : '—' }}</td>
+                    <td class="vc">{{ m.petto ? (m.petto + 'cm') : '—' }}</td>
+                    <td class="vc">{{ m.collo ? (m.collo + 'cm') : '—' }}</td>
                   </tr>
                 </tbody>
               </table>
-              <div style="margin-top:10px;" *ngIf="showAllHistory">
-                <table class="meas-table">
+              <div *ngIf="showAllMeasHistory" style="margin-top:8px;">
+                <table class="mh-table">
                   <thead>
-                    <tr>
-                      <th>Data</th>
-                      <th>Collo</th>
-                      <th>Braccio L</th>
-                      <th>Braccio R</th>
-                      <th>Coscia L</th>
-                      <th>Coscia R</th>
-                    </tr>
+                    <tr><th>Data</th><th>Sp.</th><th>Br.L</th><th>Br.R</th><th>Co.L</th><th>Co.R</th><th>Po.L</th><th>Po.R</th></tr>
                   </thead>
                   <tbody>
                     <tr *ngFor="let m of measurementsHistory">
-                      <td class="date-col">{{ m.recordedAt | date:'dd/MM/yy' }}</td>
-                      <td class="val">{{ m.collo ? (m.collo + 'cm') : '—' }}</td>
-                      <td class="val">{{ m.braccioL ? (m.braccioL + 'cm') : '—' }}</td>
-                      <td class="val">{{ m.braccioR ? (m.braccioR + 'cm') : '—' }}</td>
-                      <td class="val">{{ m.cosciaL ? (m.cosciaL + 'cm') : '—' }}</td>
-                      <td class="val">{{ m.cosciaR ? (m.cosciaR + 'cm') : '—' }}</td>
+                      <td class="dc">{{ m.recordedAt | date:'dd/MM/yy' }}</td>
+                      <td class="vc">{{ m.spalle ?? '—' }}</td>
+                      <td class="vc">{{ m.braccioL ?? '—' }}</td>
+                      <td class="vc">{{ m.braccioR ?? '—' }}</td>
+                      <td class="vc">{{ m.cosciaL ?? '—' }}</td>
+                      <td class="vc">{{ m.cosciaR ?? '—' }}</td>
+                      <td class="vc">{{ m.polpaccioL ?? '—' }}</td>
+                      <td class="vc">{{ m.polpaccioR ?? '—' }}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <ion-button fill="clear" size="small" style="margin-top:4px;" (click)="showAllHistory = !showAllHistory">
-                {{ showAllHistory ? 'Mostra meno' : 'Mostra tutte le misure' }}
+              <ion-button fill="clear" size="small" (click)="showAllMeasHistory = !showAllMeasHistory" style="margin-top:4px;">
+                {{ showAllMeasHistory ? 'Mostra meno' : 'Tutte le misure' }}
               </ion-button>
-            </div>
-          </div>
-        </ion-accordion>
+            </ng-container>
 
-      </ion-accordion-group>
+          </div>
+        </div>
+
+      </div><!-- /sections-wrap -->
 
       <div class="spacer"></div>
     </ion-content>
@@ -536,16 +511,30 @@ export class ProfilePage implements OnInit {
   weightHistory: WeightRecord[] = [];
   measurementsHistory: BodyMeasurementRecord[] = [];
 
+  openPersonal = true;
+  openBody = true;
+  openMeasurements = true;
+  showAllMeasHistory = false;
+
   savingPersonal = false;
   savingHeight = false;
   savingWeight = false;
   savingMeasurements = false;
-  showAllHistory = false;
 
   draftPersonal = { firstName: '', lastName: '', birthDate: '', gender: '' as any };
   draftHeight: number | null = null;
-  newWeightKg: number | null = null;
-  measDraft: Partial<BodyMeasurementRecord> = {};
+  newWeightInput = '';
+
+  /** Flat draft of current measurement values — always a new object on mutation */
+  measDraft: Record<string, number | null> = {
+    collo: null, spalle: null, petto: null,
+    braccioL: null, braccioR: null,
+    vita: null, fianchi: null,
+    cosciaL: null, cosciaR: null,
+    polpaccioL: null, polpaccioR: null,
+  };
+
+  readonly MEAS_KEYS = ['collo','spalle','petto','braccioL','braccioR','vita','fianchi','cosciaL','cosciaR','polpaccioL','polpaccioR'];
 
   get userEmail(): string { return this.authService.userEmail ?? ''; }
 
@@ -558,8 +547,7 @@ export class ProfilePage implements OnInit {
   }
 
   get latestWeight(): number | null {
-    if (!this.weightHistory.length) return null;
-    return Number(this.weightHistory[0].weightKg);
+    return this.weightHistory.length ? Number(this.weightHistory[0].weightKg) : null;
   }
 
   get bmiValue(): string | null {
@@ -592,11 +580,7 @@ export class ProfilePage implements OnInit {
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
   ) {
-    addIcons({
-      personOutline, scaleOutline, bodyOutline, saveOutline, addOutline,
-      chevronDownOutline, timeOutline, trashOutline, checkmarkOutline,
-      fitnessOutline, calendarOutline, barbellOutline
-    });
+    addIcons({ personOutline, scaleOutline, bodyOutline, saveOutline, addOutline, checkmarkOutline, chevronDownOutline });
   }
 
   ngOnInit() { this.loadAll(); }
@@ -630,34 +614,45 @@ export class ProfilePage implements OnInit {
     this.profileService.getMeasurementsHistory().subscribe({
       next: (h) => {
         this.measurementsHistory = h;
-        if (h.length > 0) this.measDraft = { ...h[0] };
+        if (h.length > 0) {
+          const last = h[0];
+          this.measDraft = {};
+          this.MEAS_KEYS.forEach(k => { this.measDraft[k] = (last as any)[k] ?? null; });
+        }
         check();
       },
       error: () => check()
     });
   }
 
+  toNum(v: string | null | undefined): number | null {
+    if (v === null || v === undefined || v === '') return null;
+    const n = parseFloat(v);
+    return isNaN(n) ? null : n;
+  }
+
+  fmtMeas(key: string): string {
+    const v = this.measDraft[key];
+    return v != null ? `${v}cm` : '—';
+  }
+
   savePersonal() {
     this.savingPersonal = true;
     const dto: any = {
-      firstName: this.draftPersonal.firstName || null,
-      lastName: this.draftPersonal.lastName || null,
+      firstName: this.draftPersonal.firstName?.trim() || null,
+      lastName: this.draftPersonal.lastName?.trim() || null,
       birthDate: this.draftPersonal.birthDate || null,
       gender: this.draftPersonal.gender || null,
     };
     this.profileService.updateProfile(dto).subscribe({
-      next: (p) => {
-        this.profile = p;
-        this.savingPersonal = false;
-        this.toast('Dati personali salvati', 'success');
-      },
+      next: (p) => { this.profile = p; this.savingPersonal = false; this.toast('Dati personali salvati', 'success'); },
       error: () => { this.savingPersonal = false; this.toast('Errore nel salvataggio', 'danger'); }
     });
   }
 
   saveHeight() {
-    const h = Number(this.draftHeight);
-    if (!h || h < 50 || h > 250) { this.toast('Altezza non valida', 'warning'); return; }
+    const h = this.draftHeight;
+    if (!h || h < 50 || h > 250) { this.toast('Altezza non valida (50–250 cm)', 'warning'); return; }
     this.savingHeight = true;
     this.profileService.updateProfile({ heightCm: h }).subscribe({
       next: (p) => { this.profile = p; this.savingHeight = false; this.toast('Altezza salvata', 'success'); },
@@ -666,13 +661,13 @@ export class ProfilePage implements OnInit {
   }
 
   addWeight() {
-    const w = Number(this.newWeightKg);
-    if (!w || w < 20 || w > 300) { this.toast('Peso non valido', 'warning'); return; }
+    const w = parseFloat(this.newWeightInput);
+    if (isNaN(w) || w < 20 || w > 300) { this.toast('Peso non valido (20–300 kg)', 'warning'); return; }
     this.savingWeight = true;
     this.profileService.addWeight(w).subscribe({
       next: (rec) => {
         this.weightHistory = [rec, ...this.weightHistory];
-        this.newWeightKg = null;
+        this.newWeightInput = '';
         this.savingWeight = false;
         this.toast('Peso registrato', 'success');
       },
@@ -680,22 +675,26 @@ export class ProfilePage implements OnInit {
     });
   }
 
-  async editMeasurement(field: keyof BodyMeasurementRecord, label: string) {
-    const current = (this.measDraft as any)[field];
+  async editMeas(key: string, label: string) {
+    const current = this.measDraft[key];
     const alert = await this.alertCtrl.create({
       header: label,
+      message: 'Inserisci la misura in cm',
       inputs: [{
-        name: 'value', type: 'number', placeholder: 'cm',
-        value: current ? String(current) : '',
-        min: 0, max: 300,
+        name: 'v', type: 'number', placeholder: 'cm',
+        value: current != null ? String(current) : '',
+        min: 0, max: 500,
+        attributes: { inputmode: 'decimal' }
       }],
       buttons: [
         { text: 'Annulla', role: 'cancel' },
         {
           text: 'OK',
           handler: (data) => {
-            const val = data.value === '' ? null : Number(data.value);
-            (this.measDraft as any)[field] = val;
+            const raw = data.v;
+            const val = (raw === '' || raw === null || raw === undefined) ? null : parseFloat(raw);
+            // Create new object to trigger change detection
+            this.measDraft = { ...this.measDraft, [key]: (val != null && !isNaN(val)) ? val : null };
           }
         }
       ]
@@ -705,13 +704,9 @@ export class ProfilePage implements OnInit {
 
   saveMeasurements() {
     const dto: any = {};
-    const keys: (keyof BodyMeasurementRecord)[] = [
-      'collo','spalle','petto','braccioL','braccioR',
-      'vita','fianchi','cosciaL','cosciaR','polpaccioL','polpaccioR'
-    ];
-    keys.forEach(k => { dto[k] = (this.measDraft as any)[k] ?? null; });
+    this.MEAS_KEYS.forEach(k => { dto[k] = this.measDraft[k] ?? null; });
 
-    const hasAny = keys.some(k => dto[k] !== null && dto[k] !== undefined);
+    const hasAny = this.MEAS_KEYS.some(k => dto[k] != null);
     if (!hasAny) { this.toast('Inserisci almeno una misura', 'warning'); return; }
 
     this.savingMeasurements = true;
@@ -726,7 +721,7 @@ export class ProfilePage implements OnInit {
   }
 
   private async toast(message: string, color: string) {
-    const t = await this.toastCtrl.create({ message, duration: 2000, color, position: 'top' });
+    const t = await this.toastCtrl.create({ message, duration: 2200, color, position: 'top' });
     await t.present();
   }
 }

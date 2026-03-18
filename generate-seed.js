@@ -297,36 +297,43 @@ lines.push(`  v_menu_id      UUID;`);
 lines.push(`  v_day_id       UUID;`);
 lines.push(`  v_meal_id      UUID;`);
 lines.push(``);
-// ingredient vars
+// ingredient vars — two sets: v_ing_ (Giovanni) and v_ing2_ (Giovanna)
 Object.entries(ingredientMap).forEach(([name, id]) => {
-  const varName = 'v_ing_' + name.replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-  ingredientMap[name] = { id, varName };
+  const base = name.replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+  ingredientMap[name] = { id, varName: 'v_ing_' + base, varName2: 'v_ing2_' + base };
 });
 
-Object.values(ingredientMap).forEach(({ varName }) => {
+Object.values(ingredientMap).forEach(({ varName, varName2 }) => {
   lines.push(`  ${varName} UUID;`);
+  lines.push(`  ${varName2} UUID;`);
 });
 lines.push(`BEGIN`);
 lines.push(`  SELECT id INTO v_giovanni_id FROM users WHERE email = ${q(giovanniEmail)} LIMIT 1;`);
 lines.push(`  SELECT id INTO v_giovanna_id  FROM users WHERE email = ${q(giovannaEmail)} LIMIT 1;`);
 lines.push(``);
-lines.push(`  -- ─── INGREDIENTS (owned by Giovanni) ───────────────────────`);
+function emitIngredients(userVar, varField) {
+  Object.entries(ingredientMap).forEach(([name, entry]) => {
+    const vn  = entry[varField];
+    const cat = getCategory(name);
+    const unit= getDefaultUnit(name);
+    const qty = getDefaultQty(name);
+    lines.push(`  ${vn} := gen_random_uuid();`);
+    lines.push(`  INSERT INTO ingredients (id, "userId", name, category, "defaultUnit", "defaultQty", "createdAt", "updatedAt")`);
+    lines.push(`  SELECT ${vn}, ${userVar}, ${q(name)}, ${q(cat)}, '${unit}', ${qty}, NOW(), NOW()`);
+    lines.push(`  WHERE NOT EXISTS (SELECT 1 FROM ingredients WHERE "userId" = ${userVar} AND lower(name) = lower(${q(name)}));`);
+    lines.push(`  SELECT id INTO ${vn} FROM ingredients WHERE "userId" = ${userVar} AND lower(name) = lower(${q(name)}) LIMIT 1;`);
+    lines.push(``);
+  });
+}
 
-Object.entries(ingredientMap).forEach(([name, { id, varName }]) => {
-  const cat   = getCategory(name);
-  const unit  = getDefaultUnit(name);
-  const qty   = getDefaultQty(name);
-  const mealTypesArr = `'{}'`;
-  lines.push(`  ${varName} := gen_random_uuid();`);
-  lines.push(`  INSERT INTO ingredients (id, "userId", name, category, "defaultUnit", "defaultQty", "createdAt", "updatedAt")`);
-  lines.push(`  SELECT ${varName}, v_giovanni_id, ${q(name)}, ${q(cat)}, '${unit}', ${qty}, NOW(), NOW()`);
-  lines.push(`  WHERE NOT EXISTS (SELECT 1 FROM ingredients WHERE "userId" = v_giovanni_id AND lower(name) = lower(${q(name)}));`);
-  lines.push(`  SELECT id INTO ${varName} FROM ingredients WHERE "userId" = v_giovanni_id AND lower(name) = lower(${q(name)}) LIMIT 1;`);
-  lines.push(``);
-});
+lines.push(`  -- ─── INGREDIENTS (owned by Giovanni) ───────────────────────`);
+emitIngredients('v_giovanni_id', 'varName');
+
+lines.push(`  -- ─── INGREDIENTS (owned by Giovanna) ───────────────────────`);
+emitIngredients('v_giovanna_id', 'varName2');
 
 // ── menu helper ───────────────────────────────────────────────────────────────
-function emitMenu(userVar, userEmail, days) {
+function emitMenu(userVar, userEmail, days, ingVarField) {
   const menuId = uuid();
   lines.push(`  -- ─── WEEKLY MENU for ${userEmail} ──────────────────────────────`);
   lines.push(`  v_menu_id := gen_random_uuid();`);
@@ -364,7 +371,7 @@ function emitMenu(userVar, userEmail, days) {
           lines.push(`  -- WARN: ingredient not found: ${name}`);
           return;
         }
-        const { varName } = entry;
+        const varName = entry[ingVarField];
         lines.push(`  INSERT INTO meal_items (id, "mealId", "ingredientId", quantity, unit)`);
         lines.push(`  SELECT gen_random_uuid(), v_meal_id, ${varName}, ${qty}, '${unit}'`);
         lines.push(`  WHERE NOT EXISTS (SELECT 1 FROM meal_items WHERE "mealId" = v_meal_id AND "ingredientId" = ${varName});`);
@@ -374,8 +381,8 @@ function emitMenu(userVar, userEmail, days) {
   }
 }
 
-emitMenu('v_giovanni_id', giovanniEmail, giovanniDays);
-emitMenu('v_giovanna_id', giovannaEmail, giovannaDays);
+emitMenu('v_giovanni_id', giovanniEmail, giovanniDays, 'varName');
+emitMenu('v_giovanna_id', giovannaEmail, giovannaDays, 'varName2');
 
 lines.push(`END $$;`);
 lines.push(``);

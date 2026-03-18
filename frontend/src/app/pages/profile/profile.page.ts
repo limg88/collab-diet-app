@@ -398,51 +398,51 @@ import { AuthService } from '../../core/services/auth.service';
               <!-- Chips — left side (c-L = right:55%) -->
               <div class="chip c-L c-spalle" (click)="editMeas('spalle', 'Spalle')">
                 <div class="chip-name-row"><span class="chip-name">Spalle</span></div>
-                <div class="chip-val" [class.empty]="!measDraft['spalle']">{{ fmtMeas('spalle') }}</div>
+                <div class="chip-val" [class.empty]="measDraft['spalle'] == null">{{ fmtMeas('spalle') }}</div>
               </div>
               <div class="chip c-L c-braccioL" (click)="editMeas('braccioL', 'Braccio')">
                 <div class="chip-name-row"><span class="chip-name">Braccio</span><span class="chip-side-L">&nbsp;L</span></div>
-                <div class="chip-val" [class.empty]="!measDraft['braccioL']">{{ fmtMeas('braccioL') }}</div>
+                <div class="chip-val" [class.empty]="measDraft['braccioL'] == null">{{ fmtMeas('braccioL') }}</div>
               </div>
               <div class="chip c-L c-vita" (click)="editMeas('vita', 'Vita')">
                 <div class="chip-name-row"><span class="chip-name">Vita</span></div>
-                <div class="chip-val" [class.empty]="!measDraft['vita']">{{ fmtMeas('vita') }}</div>
+                <div class="chip-val" [class.empty]="measDraft['vita'] == null">{{ fmtMeas('vita') }}</div>
               </div>
               <div class="chip c-L c-cosciaL" (click)="editMeas('cosciaL', 'Coscia')">
                 <div class="chip-name-row"><span class="chip-name">Coscia</span><span class="chip-side-L">&nbsp;L</span></div>
-                <div class="chip-val" [class.empty]="!measDraft['cosciaL']">{{ fmtMeas('cosciaL') }}</div>
+                <div class="chip-val" [class.empty]="measDraft['cosciaL'] == null">{{ fmtMeas('cosciaL') }}</div>
               </div>
               <div class="chip c-L c-polpaccioL" (click)="editMeas('polpaccioL', 'Polpaccio')">
                 <div class="chip-name-row"><span class="chip-name">Polpaccio</span><span class="chip-side-L">&nbsp;L</span></div>
-                <div class="chip-val" [class.empty]="!measDraft['polpaccioL']">{{ fmtMeas('polpaccioL') }}</div>
+                <div class="chip-val" [class.empty]="measDraft['polpaccioL'] == null">{{ fmtMeas('polpaccioL') }}</div>
               </div>
 
               <!-- Chips — center-right (c-C) -->
               <div class="chip c-C c-collo" (click)="editMeas('collo', 'Collo')" style="left:auto;right:0;transform:none;left:55%;">
                 <div class="chip-name-row"><span class="chip-name">Collo</span></div>
-                <div class="chip-val" [class.empty]="!measDraft['collo']">{{ fmtMeas('collo') }}</div>
+                <div class="chip-val" [class.empty]="measDraft['collo'] == null">{{ fmtMeas('collo') }}</div>
               </div>
 
               <!-- Chips — right side (c-R = left:55%) -->
               <div class="chip c-R c-petto" (click)="editMeas('petto', 'Petto')">
                 <div class="chip-name-row"><span class="chip-name">Petto</span></div>
-                <div class="chip-val" [class.empty]="!measDraft['petto']">{{ fmtMeas('petto') }}</div>
+                <div class="chip-val" [class.empty]="measDraft['petto'] == null">{{ fmtMeas('petto') }}</div>
               </div>
               <div class="chip c-R c-braccioR" (click)="editMeas('braccioR', 'Braccio')">
                 <div class="chip-name-row"><span class="chip-name">Braccio</span><span class="chip-side-R">&nbsp;R</span></div>
-                <div class="chip-val" [class.empty]="!measDraft['braccioR']">{{ fmtMeas('braccioR') }}</div>
+                <div class="chip-val" [class.empty]="measDraft['braccioR'] == null">{{ fmtMeas('braccioR') }}</div>
               </div>
               <div class="chip c-R c-fianchi" (click)="editMeas('fianchi', 'Fianchi')">
                 <div class="chip-name-row"><span class="chip-name">Fianchi</span></div>
-                <div class="chip-val" [class.empty]="!measDraft['fianchi']">{{ fmtMeas('fianchi') }}</div>
+                <div class="chip-val" [class.empty]="measDraft['fianchi'] == null">{{ fmtMeas('fianchi') }}</div>
               </div>
               <div class="chip c-R c-cosciaR" (click)="editMeas('cosciaR', 'Coscia')">
                 <div class="chip-name-row"><span class="chip-name">Coscia</span><span class="chip-side-R">&nbsp;R</span></div>
-                <div class="chip-val" [class.empty]="!measDraft['cosciaR']">{{ fmtMeas('cosciaR') }}</div>
+                <div class="chip-val" [class.empty]="measDraft['cosciaR'] == null">{{ fmtMeas('cosciaR') }}</div>
               </div>
               <div class="chip c-R c-polpaccioR" (click)="editMeas('polpaccioR', 'Polpaccio')">
                 <div class="chip-name-row"><span class="chip-name">Polpaccio</span><span class="chip-side-R">&nbsp;R</span></div>
-                <div class="chip-val" [class.empty]="!measDraft['polpaccioR']">{{ fmtMeas('polpaccioR') }}</div>
+                <div class="chip-val" [class.empty]="measDraft['polpaccioR'] == null">{{ fmtMeas('polpaccioR') }}</div>
               </div>
             </div>
 
@@ -465,28 +465,28 @@ import { AuthService } from '../../core/services/auth.service';
                 <tbody>
                   <tr *ngFor="let m of measurementsHistory">
                     <td class="dc">{{ m.recordedAt | date:'dd/MM/yy' }}</td>
-                    <td class="vc">{{ m.vita ? (m.vita + 'cm') : '—' }}</td>
-                    <td class="vc">{{ m.fianchi ? (m.fianchi + 'cm') : '—' }}</td>
-                    <td class="vc">{{ m.petto ? (m.petto + 'cm') : '—' }}</td>
-                    <td class="vc">{{ m.collo ? (m.collo + 'cm') : '—' }}</td>
+                    <td class="vc">{{ fmtCm(m.vita) }}</td>
+                    <td class="vc">{{ fmtCm(m.fianchi) }}</td>
+                    <td class="vc">{{ fmtCm(m.petto) }}</td>
+                    <td class="vc">{{ fmtCm(m.collo) }}</td>
                   </tr>
                 </tbody>
               </table>
               <div *ngIf="showAllMeasHistory" style="margin-top:8px;">
                 <table class="mh-table">
                   <thead>
-                    <tr><th>Data</th><th>Sp.</th><th>Br.L</th><th>Br.R</th><th>Co.L</th><th>Co.R</th><th>Po.L</th><th>Po.R</th></tr>
+                    <tr><th>Data</th><th>Spalle</th><th>Br. L</th><th>Br. R</th><th>Coscia L</th><th>Coscia R</th><th>Polp. L</th><th>Polp. R</th></tr>
                   </thead>
                   <tbody>
                     <tr *ngFor="let m of measurementsHistory">
                       <td class="dc">{{ m.recordedAt | date:'dd/MM/yy' }}</td>
-                      <td class="vc">{{ m.spalle ?? '—' }}</td>
-                      <td class="vc">{{ m.braccioL ?? '—' }}</td>
-                      <td class="vc">{{ m.braccioR ?? '—' }}</td>
-                      <td class="vc">{{ m.cosciaL ?? '—' }}</td>
-                      <td class="vc">{{ m.cosciaR ?? '—' }}</td>
-                      <td class="vc">{{ m.polpaccioL ?? '—' }}</td>
-                      <td class="vc">{{ m.polpaccioR ?? '—' }}</td>
+                      <td class="vc">{{ fmtCm(m.spalle) }}</td>
+                      <td class="vc">{{ fmtCm(m.braccioL) }}</td>
+                      <td class="vc">{{ fmtCm(m.braccioR) }}</td>
+                      <td class="vc">{{ fmtCm(m.cosciaL) }}</td>
+                      <td class="vc">{{ fmtCm(m.cosciaR) }}</td>
+                      <td class="vc">{{ fmtCm(m.polpaccioL) }}</td>
+                      <td class="vc">{{ fmtCm(m.polpaccioR) }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -617,7 +617,10 @@ export class ProfilePage implements OnInit {
         if (h.length > 0) {
           const last = h[0];
           this.measDraft = {};
-          this.MEAS_KEYS.forEach(k => { this.measDraft[k] = (last as any)[k] ?? null; });
+          this.MEAS_KEYS.forEach(k => {
+            const raw = (last as any)[k];
+            this.measDraft[k] = raw != null ? (parseFloat(String(raw)) || null) : null;
+          });
         }
         check();
       },
@@ -631,9 +634,16 @@ export class ProfilePage implements OnInit {
     return isNaN(n) ? null : n;
   }
 
+  /** Format any cm value (string or number from TypeORM decimal) as "75cm" or "—" */
+  fmtCm(v: any): string {
+    if (v === null || v === undefined || v === '') return '—';
+    const n = parseFloat(String(v));
+    if (isNaN(n)) return '—';
+    return `${Number.isInteger(n) ? n : n.toFixed(1)}cm`;
+  }
+
   fmtMeas(key: string): string {
-    const v = this.measDraft[key];
-    return v != null ? `${v}cm` : '—';
+    return this.fmtCm(this.measDraft[key]);
   }
 
   savePersonal() {

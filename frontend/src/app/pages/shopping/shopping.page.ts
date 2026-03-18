@@ -312,6 +312,15 @@ import { Unit } from '../../features/ingredients/ingredients.service';
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
+      <ion-toolbar *ngIf="editMode" style="--background: rgba(var(--ion-color-warning-rgb),0.12); --min-height: 40px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding: 0 14px;">
+          <span style="font-size:0.78rem; font-weight:700; color:var(--ion-color-warning-shade); letter-spacing:0.5px;">MODALITÀ DISPENSA</span>
+          <ion-button fill="clear" size="small" color="danger" (click)="confirmResetStock()">
+            <ion-icon name="trash-outline" slot="start"></ion-icon>
+            Azzera tutto
+          </ion-button>
+        </div>
+      </ion-toolbar>
       <ion-toolbar class="filter-toolbar">
         <div class="filter-inner">
           <ion-searchbar
@@ -633,6 +642,38 @@ export class ShoppingPage implements OnInit {
         this.importingStock = new Set([...this.importingStock].filter(id => id !== item.id));
         await this.showToast(e.error?.message || 'Errore', 'danger');
       }
+    });
+  }
+
+  async confirmResetStock() {
+    const alert = await this.alertCtrl.create({
+      header: 'Azzera dispensa',
+      message: 'Vuoi portare a zero la giacenza di tutti gli articoli? L\'operazione non è reversibile.',
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Azzera tutto', role: 'destructive',
+          handler: () => this.resetAllStock()
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  resetAllStock() {
+    const itemsWithStock = this.allItems.filter(i => Number(i.stockQty) > 0);
+    if (itemsWithStock.length === 0) { this.showToast('Nessuna giacenza da azzerare', 'medium'); return; }
+    let completed = 0;
+    itemsWithStock.forEach(item => {
+      this.shoppingService.updateItem(item.id, { stockQty: 0 }).subscribe({
+        next: (res) => {
+          this.allItems = this.allItems.map(i => i.id === item.id ? { ...i, stockQty: res.stockQty } : i);
+          this.stockDraft = { ...this.stockDraft, [item.id]: 0 };
+          completed++;
+          if (completed === itemsWithStock.length) this.showToast('Dispensa azzerata', 'success');
+        },
+        error: async () => { await this.showToast('Errore azzerando la dispensa', 'danger'); }
+      });
     });
   }
 

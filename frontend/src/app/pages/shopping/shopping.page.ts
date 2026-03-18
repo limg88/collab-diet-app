@@ -10,7 +10,8 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { add, trashOutline, refreshOutline, cartOutline, checkmarkCircle,
-  storefrontOutline, peopleOutline, pencilOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
+  storefrontOutline, peopleOutline, pencilOutline, eyeOutline, eyeOffOutline,
+  addOutline, removeOutline } from 'ionicons/icons';
 import { ShoppingService, ShoppingItem } from '../../features/shopping/shopping.service';
 import { Unit } from '../../features/ingredients/ingredients.service';
 
@@ -245,10 +246,10 @@ import { Unit } from '../../features/ingredients/ingredients.service';
     .stock-wrap {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       background: var(--ion-color-light);
-      border-radius: 8px;
-      padding: 4px 8px 4px 6px;
+      border-radius: 10px;
+      padding: 2px 6px 2px 4px;
       flex-shrink: 0;
     }
     .stock-label {
@@ -257,18 +258,26 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       font-weight: 600;
       white-space: nowrap;
     }
-    .stock-icon { font-size: 12px; color: var(--ion-color-medium); flex-shrink: 0; }
+    .stock-icon { font-size: 12px; color: var(--ion-color-medium); flex-shrink: 0; margin-right: 2px; }
     .stock-input {
-      width: 44px;
-      --padding-start: 2px;
-      --padding-end: 2px;
+      width: 38px;
+      --padding-start: 0;
+      --padding-end: 0;
       --padding-top: 0;
       --padding-bottom: 0;
-      font-size: 0.82rem;
-      font-weight: 600;
+      font-size: 0.85rem;
+      font-weight: 700;
       --background: transparent;
       text-align: center;
     }
+    .stock-btn {
+      --padding-start: 4px;
+      --padding-end: 4px;
+      height: 28px;
+      width: 28px;
+      flex-shrink: 0;
+    }
+    .stock-btn ion-icon { font-size: 15px; }
 
     /* extra actions */
     .shop-actions {
@@ -376,9 +385,18 @@ import { Unit } from '../../features/ingredients/ingredients.service';
               <div class="shop-secondary" *ngIf="item.stockQty > 0 || item.collaboratorStockQty > 0 || expandedStock.has(item.id)">
                 <div class="stock-wrap">
                   <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
-                  <span class="stock-label">Scorta:</span>
-                  <ion-input type="number" class="stock-input" [value]="item.stockQty" (ionChange)="updateStock(item, $event)" placeholder="0" min="0"></ion-input>
+                  <ion-button fill="clear" size="small" class="stock-btn" color="medium" (click)="stepStock(item, -1)">
+                    <ion-icon name="remove-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-input type="number" class="stock-input"
+                    [(ngModel)]="stockDraft[item.id]"
+                    (ionBlur)="saveStock(item)"
+                    placeholder="0" min="0" inputmode="decimal">
+                  </ion-input>
                   <span class="stock-label">{{ item.unit }}</span>
+                  <ion-button fill="clear" size="small" class="stock-btn" color="primary" (click)="stepStock(item, 1)">
+                    <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
                 </div>
                 <ion-button class="import-btn" fill="clear" size="small" *ngIf="item.collaboratorStockQty > 0"
                   [disabled]="importingStock.has(item.id)"
@@ -429,9 +447,18 @@ import { Unit } from '../../features/ingredients/ingredients.service';
               <div class="shop-secondary" *ngIf="item.stockQty > 0 || expandedStock.has(item.id)">
                 <div class="stock-wrap">
                   <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
-                  <span class="stock-label">Scorta:</span>
-                  <ion-input type="number" class="stock-input" [value]="item.stockQty" (ionChange)="updateStock(item, $event)" placeholder="0" min="0"></ion-input>
+                  <ion-button fill="clear" size="small" class="stock-btn" color="medium" (click)="stepStock(item, -1)">
+                    <ion-icon name="remove-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-input type="number" class="stock-input"
+                    [(ngModel)]="stockDraft[item.id]"
+                    (ionBlur)="saveStock(item)"
+                    placeholder="0" min="0" inputmode="decimal">
+                  </ion-input>
                   <span class="stock-label">{{ item.unit }}</span>
+                  <ion-button fill="clear" size="small" class="stock-btn" color="primary" (click)="stepStock(item, 1)">
+                    <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
                 </div>
               </div>
             </div>
@@ -464,6 +491,7 @@ export class ShoppingPage implements OnInit {
   updatingItem: Set<string> = new Set();
   importingStock: Set<string> = new Set();
   expandedStock: Set<string> = new Set();
+  stockDraft: Record<string, number> = {};
   searchQuery = '';
   hidePurchased = false;
 
@@ -487,7 +515,8 @@ export class ShoppingPage implements OnInit {
     private toastCtrl: ToastController
   ) {
     addIcons({ add, trashOutline, refreshOutline, cartOutline, checkmarkCircle,
-      storefrontOutline, peopleOutline, pencilOutline, eyeOutline, eyeOffOutline });
+      storefrontOutline, peopleOutline, pencilOutline, eyeOutline, eyeOffOutline,
+      addOutline, removeOutline });
   }
 
   ngOnInit() { this.loadList(); }
@@ -504,7 +533,12 @@ export class ShoppingPage implements OnInit {
   async loadList() {
     this.loading = true;
     this.shoppingService.getList().subscribe({
-      next: (items) => { this.allItems = items; this.loading = false; },
+      next: (items) => {
+        this.allItems = items;
+        this.loading = false;
+        // init draft values from current stockQty
+        items.forEach(i => { this.stockDraft[i.id] = Number(i.stockQty) || 0; });
+      },
       error: async () => { this.loading = false; await this.showToast('Errore caricando la lista', 'danger'); }
     });
   }
@@ -563,14 +597,24 @@ export class ShoppingPage implements OnInit {
     });
   }
 
-  updateStock(item: ShoppingItem, event: Event) {
-    const val = parseFloat((event as CustomEvent<{ value: string }>).detail.value);
+  stepStock(item: ShoppingItem, delta: number) {
+    const step = item.unit === 'unit' ? 1 : 10;
+    const current = Number(this.stockDraft[item.id]) || 0;
+    const next = Math.max(0, current + delta * step);
+    this.stockDraft = { ...this.stockDraft, [item.id]: next };
+    this.saveStock(item);
+  }
+
+  saveStock(item: ShoppingItem) {
+    const val = Number(this.stockDraft[item.id]);
     if (isNaN(val) || val < 0) return;
+    if (val === Number(item.stockQty)) return; // no change
     this.updatingItem = new Set([...this.updatingItem, item.id]);
     this.shoppingService.updateItem(item.id, { stockQty: val }).subscribe({
       next: (res) => {
         this.updatingItem = new Set([...this.updatingItem].filter(id => id !== item.id));
         this.allItems = this.allItems.map(i => i.id === item.id ? { ...i, stockQty: res.stockQty } : i);
+        this.stockDraft = { ...this.stockDraft, [item.id]: Number(res.stockQty) };
       },
       error: async (e) => {
         this.updatingItem = new Set([...this.updatingItem].filter(id => id !== item.id));

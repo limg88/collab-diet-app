@@ -114,6 +114,10 @@ import { AuthService } from '../../core/services/auth.service';
       --color: var(--ion-color-primary);
       font-size: 0.875rem;
       margin-top: 8px;
+      height: auto;
+      --padding-top: 10px;
+      --padding-bottom: 10px;
+      white-space: normal;
     }
     .error-msg {
       background: rgba(var(--ion-color-danger-rgb), 0.08);

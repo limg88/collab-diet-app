@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from '../../core/services/api.service';
 
-export interface Invite { id: string; senderEmail: string; receiverEmail: string; status: string; createdAt: string; }
+export interface Invite {
+  id: string;
+  sender: { id: string; email: string };
+  receiver: { id: string; email: string };
+  status: string;
+  createdAt: string;
+}
 export interface Collaborator { id: string; email: string; }
 
 @Injectable({ providedIn: 'root' })

@@ -194,12 +194,11 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       flex-shrink: 0;
     }
 
-    /* collab user badge — circle with initial */
+    /* collab user badge — circle with initial, color from email hash */
     .collab-badge {
       width: 18px;
       height: 18px;
       border-radius: 50%;
-      background: var(--ion-color-secondary);
       color: white;
       font-size: 0.58rem;
       font-weight: 800;
@@ -362,7 +361,9 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                 <ng-template #spinnerTpl>
                   <ion-spinner name="crescent" class="item-spinner"></ion-spinner>
                 </ng-template>
-                <span class="collab-badge" *ngFor="let c of item.collaboratorBreakdown" [title]="c.email">{{ getEmailInitial(c.email) }}</span>
+                <span class="collab-badge" *ngFor="let c of item.collaboratorBreakdown"
+                  [title]="c.email"
+                  [style.background]="getCollabBadgeColor(c.email)">{{ getEmailInitial(c.email) }}</span>
                 <ion-button fill="clear" size="small" class="stock-toggle-btn"
                   *ngIf="item.stockQty === 0 && item.collaboratorStockQty === 0"
                   [color]="expandedStock.has(item.id) ? 'primary' : 'medium'"
@@ -516,6 +517,15 @@ export class ShoppingPage implements OnInit {
 
   getEmailInitial(email: string): string {
     return (email?.split('@')[0]?.[0] ?? '?').toUpperCase();
+  }
+
+  getCollabBadgeColor(email: string): string {
+    const palette = ['#2E7D32','#F57C00','#7B1FA2','#1565C0','#00695C','#C62828','#AD1457','#E65100'];
+    let hash = 0;
+    for (let i = 0; i < (email || '').length; i++) {
+      hash = (hash * 31 + email.charCodeAt(i)) & 0xffffffff;
+    }
+    return palette[Math.abs(hash) % palette.length];
   }
 
   toggleStockExpand(id: string) {

@@ -49,22 +49,29 @@ const ALL_MEAL_TYPES: MealType[] = ['BREAKFAST','MORNING_SNACK','LUNCH','AFTERNO
     ion-item {
       --padding-start: 16px;
     }
-    .cat-suggestions {
-      padding: 4px 12px 8px;
-      display: flex;
-      flex-wrap: nowrap;
-      gap: 6px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
+    .cat-section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--ion-color-medium);
+      padding: 8px 16px 4px;
     }
-    .cat-suggestions::-webkit-scrollbar { display: none; }
+    .cat-suggestions {
+      padding: 0 12px 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
     .cat-chip {
-      --background: rgba(46,125,50,0.1);
-      --color: var(--ion-color-primary);
+      --background: var(--ion-border-color);
+      --color: var(--ion-color-medium);
       font-size: 0.8rem;
-      height: 28px;
+      height: 30px;
       cursor: pointer;
+      transition: background 0.15s;
+    }
+    .cat-chip.active {
+      --background: var(--ion-color-primary);
+      --color: white;
     }
     .meal-types {
       padding: 4px 16px 8px;
@@ -134,14 +141,18 @@ const ALL_MEAL_TYPES: MealType[] = ['BREAKFAST','MORNING_SNACK','LUNCH','AFTERNO
         </ion-list>
 
         <!-- Category suggestions -->
-        <div class="cat-suggestions" *ngIf="existingCategories.length > 0">
-          <ion-chip
-            class="cat-chip"
-            *ngFor="let cat of existingCategories"
-            (click)="selectCategory(cat)">
-            {{ cat }}
-          </ion-chip>
-        </div>
+        <ng-container *ngIf="existingCategories.length > 0">
+          <p class="cat-section-label">Categorie esistenti — tocca per selezionare</p>
+          <div class="cat-suggestions">
+            <ion-chip
+              class="cat-chip"
+              [class.active]="form.category === cat"
+              *ngFor="let cat of existingCategories"
+              (click)="selectCategory(cat)">
+              {{ cat }}
+            </ion-chip>
+          </div>
+        </ng-container>
 
         <ion-list lines="inset">
           <ion-item>

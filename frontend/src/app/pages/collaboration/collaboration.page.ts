@@ -18,10 +18,10 @@ import {
 import { CollaboratorMenuComponent } from '../../shared/collaborator-menu/collaborator-menu.component';
 
 const STATUS_IT: Record<string, string> = {
-  PENDING: 'In attesa',
-  ACCEPTED: 'Accettato',
-  REJECTED: 'Rifiutato',
-  REVOKED: 'Revocato'
+  PENDING: 'In attesa',   pending: 'In attesa',
+  ACCEPTED: 'Accettato',  accepted: 'Accettato',
+  REJECTED: 'Rifiutato',  rejected: 'Rifiutato',
+  REVOKED: 'Revocato',    revoked: 'Revocato'
 };
 
 @Component({
@@ -340,10 +340,10 @@ const STATUS_IT: Record<string, string> = {
               <span class="section-count">{{ receivedInvites.length }}</span>
             </div>
             <div class="received-row" *ngFor="let inv of receivedInvites">
-              <div class="avatar" [style.background]="getAvatarGradient(inv.senderEmail)">{{ getInitials(inv.senderEmail) }}</div>
+              <div class="avatar" [style.background]="getAvatarGradient(inv.sender?.email || '')">{{ getInitials(inv.sender?.email || '') }}</div>
               <div class="received-info">
                 <div class="received-from">Invito da</div>
-                <div class="received-email">{{ inv.senderEmail }}</div>
+                <div class="received-email">{{ inv.sender?.email }}</div>
                 <div class="collab-date">{{ inv.createdAt | date:'dd/MM/yyyy' }}</div>
               </div>
               <div class="action-btn-group">
@@ -388,19 +388,20 @@ const STATUS_IT: Record<string, string> = {
               <span class="section-count">{{ sentInvites.length }}</span>
             </div>
             <div class="collab-row" *ngFor="let inv of sentInvites">
-              <div class="avatar" [style.background]="getAvatarGradient(inv.receiverEmail)">{{ getInitials(inv.receiverEmail) }}</div>
+              <div class="avatar" [style.background]="getAvatarGradient(inv.receiver?.email || '')">{{ getInitials(inv.receiver?.email || '') }}</div>
               <div class="collab-info">
-                <div class="collab-email">{{ inv.receiverEmail }}</div>
+                <div class="collab-email">{{ inv.receiver?.email }}</div>
                 <div class="collab-date">{{ inv.createdAt | date:'dd/MM/yyyy' }}</div>
               </div>
               <span class="status-badge" [ngClass]="getStatusClass(inv.status)">
                 {{ getStatusLabel(inv.status) }}
               </span>
               <ion-button
-                *ngIf="inv.status === 'PENDING'"
+                *ngIf="inv.status?.toLowerCase() === 'pending'"
                 fill="clear"
                 color="medium"
                 size="small"
+                title="Revoca invito"
                 (click)="revoke(inv.id)">
                 <ion-icon name="close-outline" slot="icon-only"></ion-icon>
               </ion-button>
@@ -599,11 +600,11 @@ export class CollaborationPage implements OnInit {
   }
 
   getStatusClass(status: string): string {
-    switch (status) {
-      case 'PENDING':  return 'status-pending';
-      case 'ACCEPTED': return 'status-accepted';
-      case 'REJECTED': return 'status-rejected';
-      case 'REVOKED':  return 'status-revoked';
+    switch ((status || '').toLowerCase()) {
+      case 'pending':  return 'status-pending';
+      case 'accepted': return 'status-accepted';
+      case 'rejected': return 'status-rejected';
+      case 'revoked':  return 'status-revoked';
       default: return 'status-revoked';
     }
   }

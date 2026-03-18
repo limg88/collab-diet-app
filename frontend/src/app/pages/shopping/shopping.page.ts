@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
   IonIcon, IonFab, IonFabButton,
-  IonCheckbox, IonInput, IonProgressBar, IonSkeletonText, IonSearchbar,
+  IonCheckbox, IonInput, IonProgressBar, IonSkeletonText, IonSearchbar, IonSpinner,
   AlertController, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -21,7 +21,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
     CommonModule, FormsModule, RouterLink,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
     IonIcon, IonFab, IonFabButton,
-    IonCheckbox, IonInput, IonProgressBar, IonSkeletonText, IonSearchbar
+    IonCheckbox, IonInput, IonProgressBar, IonSkeletonText, IonSearchbar, IonSpinner
   ],
   styles: [`
     /* ─── Filter bar ─── */
@@ -136,18 +136,26 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       background: var(--ion-card-background);
     }
 
-    /* ─── Shop row — single line ─── */
+    /* ─── Shop row — two-line layout ─── */
     .shop-row {
       display: flex;
-      align-items: center;
-      padding: 10px 8px 10px 10px;
-      gap: 7px;
+      flex-direction: column;
+      padding: 10px 10px 8px 10px;
+      gap: 6px;
       border-bottom: 1px solid var(--ion-border-color);
       background: var(--ion-item-background);
       transition: opacity 0.2s;
     }
     .shop-row:last-child { border-bottom: none; }
     .shop-row.purchased { opacity: 0.45; }
+
+    /* ── Primary line: check + name + qty + badges ── */
+    .shop-primary {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+    }
 
     .shop-check {
       --size: 20px;
@@ -181,19 +189,19 @@ import { Unit } from '../../features/ingredients/ingredients.service';
     .item-covered {
       font-size: 0.72rem;
       font-weight: 700;
-      color: var(--ion-color-primary);
+      color: var(--ion-color-success);
       white-space: nowrap;
       flex-shrink: 0;
     }
 
     /* collab user badge — circle with initial */
     .collab-badge {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       background: var(--ion-color-secondary);
       color: white;
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       font-weight: 800;
       display: flex;
       align-items: center;
@@ -201,6 +209,22 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       flex-shrink: 0;
       letter-spacing: 0;
     }
+
+    .item-spinner {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      color: var(--ion-color-medium);
+    }
+
+    /* ── Secondary line: stock + collab import + extra actions ── */
+    .shop-secondary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-left: 27px; /* align under name (checkbox width + gap) */
+    }
+
     .import-btn {
       --color: var(--ion-color-tertiary);
       --padding-start: 6px;
@@ -221,9 +245,15 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       padding: 4px 8px 4px 6px;
       flex-shrink: 0;
     }
+    .stock-label {
+      font-size: 0.72rem;
+      color: var(--ion-color-medium);
+      font-weight: 600;
+      white-space: nowrap;
+    }
     .stock-icon { font-size: 12px; color: var(--ion-color-medium); flex-shrink: 0; }
     .stock-input {
-      width: 40px;
+      width: 44px;
       --padding-start: 2px;
       --padding-end: 2px;
       --padding-top: 0;
@@ -240,6 +270,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       align-items: center;
       flex-shrink: 0;
       gap: 0;
+      margin-left: auto;
     }
   `],
   template: `
@@ -313,18 +344,31 @@ import { Unit } from '../../features/ingredients/ingredients.service';
           </div>
           <div class="list-wrap">
             <div class="shop-row" [class.purchased]="item.isPurchased" *ngFor="let item of menuItems">
-              <ion-checkbox class="shop-check" [checked]="item.isPurchased" (ionChange)="togglePurchased(item)" color="success"></ion-checkbox>
-              <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
-              <span class="item-qty" *ngIf="getQtyToBuy(item) > 0">({{ getQtyToBuy(item) }} {{ item.unit }})</span>
-              <span class="item-covered" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓</span>
-              <span class="collab-badge" *ngFor="let c of item.collaboratorBreakdown" [title]="c.email">{{ getEmailInitial(c.email) }}</span>
-              <ion-button class="import-btn" fill="clear" size="small" *ngIf="item.collaboratorStockQty > 0"
-                [disabled]="importingStock.has(item.id)"
-                title="Importa scorta collaboratore ({{ item.collaboratorStockQty }} {{ item.unit }})"
-                (click)="importCollaboratorStock(item)">+scorta</ion-button>
-              <div class="stock-wrap">
-                <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
-                <ion-input type="number" class="stock-input" [value]="item.stockQty" (ionChange)="updateStock(item, $event)" placeholder="0" min="0"></ion-input>
+              <!-- Primary line -->
+              <div class="shop-primary">
+                <ion-checkbox class="shop-check" [checked]="item.isPurchased" (ionChange)="togglePurchased(item)" color="success"></ion-checkbox>
+                <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
+                <ng-container *ngIf="!updatingItem.has(item.id); else spinnerTpl">
+                  <span class="item-qty" *ngIf="getQtyToBuy(item) > 0">({{ getQtyToBuy(item) }} {{ item.unit }})</span>
+                  <span class="item-covered" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓ coperto</span>
+                </ng-container>
+                <ng-template #spinnerTpl>
+                  <ion-spinner name="crescent" class="item-spinner"></ion-spinner>
+                </ng-template>
+                <span class="collab-badge" *ngFor="let c of item.collaboratorBreakdown" [title]="c.email">{{ getEmailInitial(c.email) }}</span>
+              </div>
+              <!-- Secondary line: stock management -->
+              <div class="shop-secondary">
+                <div class="stock-wrap">
+                  <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
+                  <span class="stock-label">Scorta:</span>
+                  <ion-input type="number" class="stock-input" [value]="item.stockQty" (ionChange)="updateStock(item, $event)" placeholder="0" min="0"></ion-input>
+                  <span class="stock-label">{{ item.unit }}</span>
+                </div>
+                <ion-button class="import-btn" fill="clear" size="small" *ngIf="item.collaboratorStockQty > 0"
+                  [disabled]="importingStock.has(item.id)"
+                  title="Importa scorta collaboratore ({{ item.collaboratorStockQty }} {{ item.unit }})"
+                  (click)="importCollaboratorStock(item)">+scorta</ion-button>
               </div>
             </div>
           </div>
@@ -339,21 +383,34 @@ import { Unit } from '../../features/ingredients/ingredients.service';
           </div>
           <div class="list-wrap">
             <div class="shop-row" [class.purchased]="item.isPurchased" *ngFor="let item of extraItems">
-              <ion-checkbox class="shop-check" [checked]="item.isPurchased" (ionChange)="togglePurchased(item)" color="success"></ion-checkbox>
-              <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
-              <span class="item-qty" *ngIf="getQtyToBuy(item) > 0">({{ getQtyToBuy(item) }} {{ item.unit }})</span>
-              <span class="item-covered" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓</span>
-              <div class="stock-wrap">
-                <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
-                <ion-input type="number" class="stock-input" [value]="item.stockQty" (ionChange)="updateStock(item, $event)" placeholder="0" min="0"></ion-input>
+              <!-- Primary line -->
+              <div class="shop-primary">
+                <ion-checkbox class="shop-check" [checked]="item.isPurchased" (ionChange)="togglePurchased(item)" color="success"></ion-checkbox>
+                <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
+                <ng-container *ngIf="!updatingItem.has(item.id); else spinnerTplExtra">
+                  <span class="item-qty" *ngIf="getQtyToBuy(item) > 0">({{ getQtyToBuy(item) }} {{ item.unit }})</span>
+                  <span class="item-covered" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓ coperto</span>
+                </ng-container>
+                <ng-template #spinnerTplExtra>
+                  <ion-spinner name="crescent" class="item-spinner"></ion-spinner>
+                </ng-template>
+                <div class="shop-actions">
+                  <ion-button fill="clear" color="primary" size="small" (click)="openEditExtra(item)">
+                    <ion-icon name="pencil-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" color="danger" size="small" (click)="deleteExtra(item.id)">
+                    <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </div>
               </div>
-              <div class="shop-actions">
-                <ion-button fill="clear" color="primary" size="small" (click)="openEditExtra(item)">
-                  <ion-icon name="pencil-outline" slot="icon-only"></ion-icon>
-                </ion-button>
-                <ion-button fill="clear" color="danger" size="small" (click)="deleteExtra(item.id)">
-                  <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-                </ion-button>
+              <!-- Secondary line: stock -->
+              <div class="shop-secondary">
+                <div class="stock-wrap">
+                  <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
+                  <span class="stock-label">Scorta:</span>
+                  <ion-input type="number" class="stock-input" [value]="item.stockQty" (ionChange)="updateStock(item, $event)" placeholder="0" min="0"></ion-input>
+                  <span class="stock-label">{{ item.unit }}</span>
+                </div>
               </div>
             </div>
           </div>

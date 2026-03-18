@@ -221,6 +221,13 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       --padding-end: 4px;
       height: 28px;
       flex-shrink: 0;
+      opacity: 0.25;
+      transition: opacity 0.15s;
+    }
+    .menu-item-row:hover .item-del-btn,
+    .item-del-btn:focus,
+    .item-del-btn:active {
+      opacity: 1;
     }
 
     .meal-empty {

@@ -29,6 +29,20 @@ const UNIT_COLORS: Record<Unit, string> = {
     IngredientFormComponent
   ],
   styles: [`
+    .search-filter-bar {
+      background: var(--ion-color-light);
+      padding: 8px 12px 4px;
+    }
+    .filter-chips {
+      display: flex;
+      gap: 6px;
+      padding: 4px 0 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filter-chips::-webkit-scrollbar { display: none; }
+
     .count-line {
       padding: 4px 16px 8px;
       font-size: 0.8rem;
@@ -99,18 +113,18 @@ const UNIT_COLORS: Record<Unit, string> = {
       <ion-toolbar>
         <ion-title>Ingredienti</ion-title>
       </ion-toolbar>
-      <ion-toolbar style="--background: var(--ion-color-light); --border-width: 0;">
+    </ion-header>
+
+    <ion-content>
+      <!-- Search + filter bar (scrolls away with content) -->
+      <div class="search-filter-bar" *ngIf="!loading">
         <ion-searchbar
           placeholder="Cerca ingrediente..."
           [(ngModel)]="searchQuery"
           (ionInput)="filterIngredients()"
-          style="--border-radius: 10px; --box-shadow: 0 1px 6px rgba(0,0,0,0.08);">
+          style="--border-radius: 10px; --box-shadow: none; padding: 0;">
         </ion-searchbar>
-      </ion-toolbar>
-      <!-- Filter chips bar -->
-      <ion-toolbar style="--background: var(--ion-color-light); --border-width: 0; min-height: unset;" *ngIf="!loading">
-        <div style="display: flex; gap: 6px; padding: 6px 12px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;">
-          <!-- Unit filters -->
+        <div class="filter-chips">
           <ion-chip
             *ngFor="let u of ['gr', 'ml', 'unit']"
             [style.--background]="activeUnitFilter === u ? getUnitColor(u) : 'var(--ion-border-color)'"
@@ -119,7 +133,6 @@ const UNIT_COLORS: Record<Unit, string> = {
             (click)="setUnitFilter(u)">
             {{ u }}
           </ion-chip>
-          <!-- Category filter chip -->
           <ion-chip
             *ngIf="existingCategories.length > 0"
             [style.--background]="activeCategoryFilter ? 'var(--ion-color-secondary)' : 'var(--ion-border-color)'"
@@ -128,7 +141,6 @@ const UNIT_COLORS: Record<Unit, string> = {
             (click)="openCategorySheet()">
             {{ activeCategoryFilter ? activeCategoryFilter : 'Categoria ▾' }}
           </ion-chip>
-          <!-- Clear filters -->
           <ion-chip
             *ngIf="hasActiveFilters"
             style="--background: rgba(var(--ion-color-danger-rgb),0.1); --color: var(--ion-color-danger); font-size: 0.78rem; height: 28px; flex-shrink: 0;"
@@ -136,16 +148,17 @@ const UNIT_COLORS: Record<Unit, string> = {
             ✕ Reset
           </ion-chip>
         </div>
-      </ion-toolbar>
-    </ion-header>
+      </div>
 
-    <ion-content>
       <p class="count-line" *ngIf="!loading">
         {{ filtered.length }} ingredient{{ filtered.length !== 1 ? 'i' : 'e' }}
       </p>
 
       <!-- Skeleton -->
       <ng-container *ngIf="loading">
+        <div style="margin: 12px 12px 0; border-radius: 10px; overflow: hidden;">
+          <ion-skeleton-text animated style="height:44px; margin:0;"></ion-skeleton-text>
+        </div>
         <div style="margin: 8px 12px; display: flex; flex-direction: column; gap: 1px; border-radius: 12px; overflow: hidden;">
           <ion-skeleton-text animated style="height:60px; margin:0;" *ngFor="let x of [1,2,3,4,5]"></ion-skeleton-text>
         </div>

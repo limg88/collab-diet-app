@@ -216,6 +216,11 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       flex-shrink: 0;
       color: var(--ion-color-medium);
     }
+    .has-stock-icon {
+      font-size: 13px;
+      color: var(--ion-color-success);
+      flex-shrink: 0;
+    }
 
     /* ── Secondary line: stock + collab import + extra actions ── */
     .shop-secondary {
@@ -373,7 +378,8 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                 <ion-checkbox class="shop-check" [checked]="item.isPurchased" (ionChange)="togglePurchased(item)" color="success"></ion-checkbox>
                 <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
                 <ng-container *ngIf="!updatingItem.has(item.id); else spinnerTpl">
-                  <span class="item-qty">({{ item.totalQty }} {{ item.unit }})</span>
+                  <span class="item-qty">({{ getQtyToBuy(item) }} {{ item.unit }})</span>
+                  <ion-icon name="storefront-outline" class="has-stock-icon" *ngIf="item.stockQty > 0" title="In dispensa: {{ item.stockQty }} {{ item.unit }}"></ion-icon>
                 </ng-container>
                 <ng-template #spinnerTpl>
                   <ion-spinner name="crescent" class="item-spinner"></ion-spinner>
@@ -383,7 +389,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                   [style.background]="getCollabBadgeColor(c.email)">{{ getEmailInitials(c.email) }}</span>
               </div>
               <!-- Secondary line: dispensa visible in edit mode or when stock > 0 -->
-              <div class="shop-secondary" *ngIf="editMode || item.stockQty > 0 || item.collaboratorStockQty > 0">
+              <div class="shop-secondary" *ngIf="editMode">
                 <div class="stock-wrap">
                   <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
                   <ion-button fill="clear" size="small" class="stock-btn" color="medium" (click)="stepStock(item, -1)">
@@ -424,7 +430,8 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                 <ion-checkbox class="shop-check" [checked]="item.isPurchased" (ionChange)="togglePurchased(item)" color="success"></ion-checkbox>
                 <span class="item-name" [class.crossed]="item.isPurchased">{{ item.name }}</span>
                 <ng-container *ngIf="!updatingItem.has(item.id); else spinnerTplExtra">
-                  <span class="item-qty">({{ item.totalQty }} {{ item.unit }})</span>
+                  <span class="item-qty">({{ getQtyToBuy(item) }} {{ item.unit }})</span>
+                  <ion-icon name="storefront-outline" class="has-stock-icon" *ngIf="item.stockQty > 0" title="In dispensa: {{ item.stockQty }} {{ item.unit }}"></ion-icon>
                 </ng-container>
                 <ng-template #spinnerTplExtra>
                   <ion-spinner name="crescent" class="item-spinner"></ion-spinner>
@@ -439,7 +446,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                 </div>
               </div>
               <!-- Secondary line: dispensa visible in edit mode or when stock > 0 -->
-              <div class="shop-secondary" *ngIf="editMode || item.stockQty > 0 || item.collaboratorStockQty > 0">
+              <div class="shop-secondary" *ngIf="editMode">
                 <div class="stock-wrap">
                   <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
                   <ion-button fill="clear" size="small" class="stock-btn" color="medium" (click)="stepStock(item, -1)">

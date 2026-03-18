@@ -39,7 +39,7 @@ const UNIT_COLORS: Record<Unit, string> = {
       --padding-end: 8px;
       --inner-padding-end: 0;
       --border-radius: 0;
-      --background: white;
+      --background: var(--ion-item-background);
     }
     .ing-name {
       font-weight: 600;
@@ -99,22 +99,22 @@ const UNIT_COLORS: Record<Unit, string> = {
       <ion-toolbar>
         <ion-title>Ingredienti</ion-title>
       </ion-toolbar>
-      <ion-toolbar style="--background: var(--ion-color-primary);">
+      <ion-toolbar style="--background: var(--ion-color-light); --border-width: 0;">
         <ion-searchbar
           placeholder="Cerca ingrediente..."
           [(ngModel)]="searchQuery"
           (ionInput)="filterIngredients()"
-          style="--background: rgba(255,255,255,0.15); --color: white; --placeholder-color: rgba(255,255,255,0.7); --icon-color: rgba(255,255,255,0.8); --border-radius: 10px;">
+          style="--border-radius: 10px; --box-shadow: 0 1px 6px rgba(0,0,0,0.08);">
         </ion-searchbar>
       </ion-toolbar>
       <!-- Filter chips bar -->
-      <ion-toolbar style="--background: #f5f5f5; --border-width: 0; min-height: unset;" *ngIf="!loading">
+      <ion-toolbar style="--background: var(--ion-color-light); --border-width: 0; min-height: unset;" *ngIf="!loading">
         <div style="display: flex; gap: 6px; padding: 6px 12px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;">
           <!-- Unit filters -->
           <ion-chip
             *ngFor="let u of ['gr', 'ml', 'unit']"
-            [style.--background]="activeUnitFilter === u ? getUnitColor(u) : 'rgba(0,0,0,0.07)'"
-            [style.--color]="activeUnitFilter === u ? 'white' : '#555'"
+            [style.--background]="activeUnitFilter === u ? getUnitColor(u) : 'var(--ion-border-color)'"
+            [style.--color]="activeUnitFilter === u ? 'white' : 'var(--ion-color-medium)'"
             style="font-size: 0.78rem; height: 28px; flex-shrink: 0;"
             (click)="setUnitFilter(u)">
             {{ u }}
@@ -122,8 +122,8 @@ const UNIT_COLORS: Record<Unit, string> = {
           <!-- Category filter chip -->
           <ion-chip
             *ngIf="existingCategories.length > 0"
-            [style.--background]="activeCategoryFilter ? 'var(--ion-color-secondary)' : 'rgba(0,0,0,0.07)'"
-            [style.--color]="activeCategoryFilter ? 'white' : '#555'"
+            [style.--background]="activeCategoryFilter ? 'var(--ion-color-secondary)' : 'var(--ion-border-color)'"
+            [style.--color]="activeCategoryFilter ? 'white' : 'var(--ion-color-medium)'"
             style="font-size: 0.78rem; height: 28px; flex-shrink: 0;"
             (click)="openCategorySheet()">
             {{ activeCategoryFilter ? activeCategoryFilter : 'Categoria ▾' }}
@@ -131,7 +131,7 @@ const UNIT_COLORS: Record<Unit, string> = {
           <!-- Clear filters -->
           <ion-chip
             *ngIf="hasActiveFilters"
-            style="--background: rgba(211,47,47,0.1); --color: var(--ion-color-danger); font-size: 0.78rem; height: 28px; flex-shrink: 0;"
+            style="--background: rgba(var(--ion-color-danger-rgb),0.1); --color: var(--ion-color-danger); font-size: 0.78rem; height: 28px; flex-shrink: 0;"
             (click)="clearFilters()">
             ✕ Reset
           </ion-chip>
@@ -180,6 +180,9 @@ const UNIT_COLORS: Record<Unit, string> = {
         <ion-icon name="nutrition-outline" class="empty-icon"></ion-icon>
         <h3>Nessun ingrediente</h3>
         <p>Aggiungi i tuoi ingredienti preferiti per iniziare a pianificare i pasti.</p>
+        <ion-button (click)="openCreateIngredient()" [disabled]="saving" style="margin-top:8px;">
+          Aggiungi il primo ingrediente
+        </ion-button>
       </div>
       <div class="empty-state" *ngIf="!loading && ingredients.length > 0 && filtered.length === 0">
         <h3>Nessun risultato</h3>

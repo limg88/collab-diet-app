@@ -12,6 +12,7 @@ import { add, trashOutline, logOutOutline, sunny, restaurant, cafe, iceCream, mo
 import { MenuService, WeeklyMenu, MealItem } from '../../features/menu/menu.service';
 import { IngredientsService, Ingredient, MealType } from '../../features/ingredients/ingredients.service';
 import { AuthService } from '../../core/services/auth.service';
+import { Router } from '@angular/router';
 import { IngredientPickerComponent } from '../../shared/ingredient-picker/ingredient-picker.component';
 
 const DAY_NAMES_SHORT = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
@@ -243,8 +244,8 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
       <ion-toolbar>
         <ion-title>Menù Settimanale</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="logout()" fill="clear" style="--color:white">
-            <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
+          <ion-button (click)="logout()" fill="clear" style="--color:rgba(255,255,255,0.6); --padding-start:8px; --padding-end:8px;" title="Esci dall'account">
+            <ion-icon name="log-out-outline" slot="icon-only" style="font-size:18px;"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -279,11 +280,12 @@ interface DayView { dayOfWeek: number; short: string; full: string; meals: MealV
           <span class="day-date-label">{{ getDayShortDate(selectedDay.dayOfWeek) }}</span>
           <span class="today-badge" *ngIf="selectedDay.isToday">Oggi</span>
           <span class="day-title-spacer"></span>
-          <span class="meals-counter">{{ visibleMealsCount }}/6</span>
+          <span class="meals-counter">{{ visibleMealsCount }} pasti</span>
           <ion-chip
             class="compact-chip"
+            [title]="hideEmptyMeals ? 'Mostra tutti i pasti, anche quelli vuoti' : 'Mostra solo i pasti pianificati'"
             (click)="hideEmptyMeals = !hideEmptyMeals">
-            {{ hideEmptyMeals ? 'Tutti' : 'Compatta' }}
+            {{ hideEmptyMeals ? 'Mostra vuoti' : 'Nascondi vuoti' }}
           </ion-chip>
         </div>
 
@@ -344,6 +346,7 @@ export class MenuPage implements OnInit {
     private menuService: MenuService,
     private ingredientsService: IngredientsService,
     private authService: AuthService,
+    private router: Router,
     private modalCtrl: ModalController,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController
@@ -450,11 +453,18 @@ export class MenuPage implements OnInit {
 
   async openAddItem(dayOfWeek: number, mealType: MealType) {
     if (this.ingredients.length === 0) {
-      const toast = await this.toastCtrl.create({
-        message: '🌿 Aggiungi prima degli ingredienti nella sezione "Ingredienti"',
-        duration: 3000, color: 'warning', position: 'top'
+      const alert = await this.alertCtrl.create({
+        header: 'Nessun ingrediente',
+        message: 'Aggiungi prima gli ingredienti per poter pianificare i pasti.',
+        buttons: [
+          { text: 'Annulla', role: 'cancel' },
+          {
+            text: 'Vai agli ingredienti',
+            handler: () => { this.router.navigateByUrl('/ingredients'); }
+          }
+        ]
       });
-      await toast.present();
+      await alert.present();
       return;
     }
 

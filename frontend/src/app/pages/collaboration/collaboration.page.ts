@@ -9,7 +9,7 @@ import {
   AlertController, ToastController, ModalController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { checkmarkOutline, closeOutline, personRemoveOutline, mailOutline, peopleOutline, refreshOutline, sendOutline, personAddOutline, calendarOutline } from 'ionicons/icons';
+import { checkmarkOutline, closeOutline, personRemoveOutline, mailOutline, peopleOutline, refreshOutline, sendOutline, personAddOutline, calendarOutline, chevronDownOutline } from 'ionicons/icons';
 import {
   CollaborationService,
   Collaborator,
@@ -146,7 +146,6 @@ const STATUS_IT: Record<string, string> = {
       width: 38px;
       height: 38px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #2E7D32, #4CAF50);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -154,12 +153,6 @@ const STATUS_IT: Record<string, string> = {
       font-weight: 700;
       color: white;
       flex-shrink: 0;
-    }
-    .avatar.orange {
-      background: linear-gradient(135deg, #F57C00, #FFA000);
-    }
-    .avatar.purple {
-      background: linear-gradient(135deg, #7B1FA2, #AB47BC);
     }
 
     .collab-info { flex: 1; overflow: hidden; }
@@ -237,6 +230,23 @@ const STATUS_IT: Record<string, string> = {
       font-weight: 700;
     }
 
+    /* Collapsed invite row */
+    .invite-collapsed {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--ion-card-background);
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: var(--app-shadow);
+      cursor: pointer;
+      color: var(--ion-color-primary);
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: 1px dashed rgba(var(--ion-color-primary-rgb), 0.3);
+    }
+    .invite-collapsed ion-icon { font-size: 18px; flex-shrink: 0; }
+
     /* Empty state */
     .empty-state {
       display: flex;
@@ -292,8 +302,8 @@ const STATUS_IT: Record<string, string> = {
         </ng-container>
 
         <ng-container *ngIf="!loading">
-          <!-- Invite card -->
-          <div class="invite-card">
+          <!-- Invite card — collapsed to a single button when collaborators already exist -->
+          <div class="invite-card" *ngIf="collaborators.length === 0 || showInviteForm">
             <p class="card-title">Invita un collaboratore</p>
             <p class="card-subtitle">Il collaboratore potrà visualizzare e modificare il tuo menù</p>
             <div class="invite-row">
@@ -310,6 +320,16 @@ const STATUS_IT: Record<string, string> = {
                 <ion-icon name="send-outline" slot="icon-only"></ion-icon>
               </ion-button>
             </div>
+            <ion-button *ngIf="collaborators.length > 0" fill="clear" color="medium" size="small"
+              style="margin-top:8px;" (click)="showInviteForm = false">
+              Chiudi
+            </ion-button>
+          </div>
+          <div class="invite-collapsed" *ngIf="collaborators.length > 0 && !showInviteForm"
+            (click)="showInviteForm = true">
+            <ion-icon name="person-add-outline"></ion-icon>
+            <span>Invita un altro collaboratore</span>
+            <ion-icon name="chevron-down-outline" style="margin-left:auto; color:var(--ion-color-medium);"></ion-icon>
           </div>
 
           <!-- Received invites -->
@@ -320,7 +340,7 @@ const STATUS_IT: Record<string, string> = {
               <span class="section-count">{{ receivedInvites.length }}</span>
             </div>
             <div class="received-row" *ngFor="let inv of receivedInvites">
-              <div class="avatar orange">{{ getInitials(inv.senderEmail) }}</div>
+              <div class="avatar" [style.background]="getAvatarGradient(inv.senderEmail)">{{ getInitials(inv.senderEmail) }}</div>
               <div class="received-info">
                 <div class="received-from">Invito da</div>
                 <div class="received-email">{{ inv.senderEmail }}</div>
@@ -345,15 +365,15 @@ const STATUS_IT: Record<string, string> = {
               <span class="section-count">{{ collaborators.length }}</span>
             </div>
             <div class="collab-row" *ngFor="let c of collaborators">
-              <div class="avatar">{{ getInitials(c.email) }}</div>
+              <div class="avatar" [style.background]="getAvatarGradient(c.email)">{{ getInitials(c.email) }}</div>
               <div class="collab-info">
                 <div class="collab-email">{{ c.email }}</div>
               </div>
-              <div style="display: flex; gap: 4px; flex-shrink: 0;">
-                <ion-button fill="outline" color="primary" size="small" (click)="viewMenu(c)" style="--border-radius: 8px; height: 34px; font-size: 0.78rem; font-weight: 700;">
-                  Vedi menù
+              <div style="display: flex; gap: 2px; flex-shrink: 0;">
+                <ion-button fill="clear" color="primary" size="small" (click)="viewMenu(c)" title="Vedi menù di {{ c.email }}" style="--border-radius: 8px; height: 34px;">
+                  <ion-icon name="calendar-outline" slot="icon-only"></ion-icon>
                 </ion-button>
-                <ion-button fill="clear" color="danger" size="small" (click)="disconnect(c)">
+                <ion-button fill="clear" color="danger" size="small" (click)="disconnect(c)" title="Rimuovi collaboratore">
                   <ion-icon name="person-remove-outline" slot="icon-only"></ion-icon>
                 </ion-button>
               </div>
@@ -368,7 +388,7 @@ const STATUS_IT: Record<string, string> = {
               <span class="section-count">{{ sentInvites.length }}</span>
             </div>
             <div class="collab-row" *ngFor="let inv of sentInvites">
-              <div class="avatar purple">{{ getInitials(inv.receiverEmail) }}</div>
+              <div class="avatar" [style.background]="getAvatarGradient(inv.receiverEmail)">{{ getInitials(inv.receiverEmail) }}</div>
               <div class="collab-info">
                 <div class="collab-email">{{ inv.receiverEmail }}</div>
                 <div class="collab-date">{{ inv.createdAt | date:'dd/MM/yyyy' }}</div>
@@ -406,6 +426,7 @@ export class CollaborationPage implements OnInit {
   sentInvites: Invite[] = [];
   receivedInvites: Invite[] = [];
   loading = true;
+  showInviteForm = false;
 
   constructor(
     private collaborationService: CollaborationService,
@@ -413,7 +434,7 @@ export class CollaborationPage implements OnInit {
     private toastCtrl: ToastController,
     private modalCtrl: ModalController
   ) {
-    addIcons({ checkmarkOutline, closeOutline, personRemoveOutline, mailOutline, peopleOutline, refreshOutline, sendOutline, personAddOutline, calendarOutline });
+    addIcons({ checkmarkOutline, closeOutline, personRemoveOutline, mailOutline, peopleOutline, refreshOutline, sendOutline, personAddOutline, calendarOutline, chevronDownOutline });
   }
 
   ngOnInit() {
@@ -518,6 +539,22 @@ export class CollaborationPage implements OnInit {
     const parts = email.split('@')[0].split(/[._\-]/);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return email.substring(0, 2).toUpperCase();
+  }
+
+  getAvatarGradient(email: string): string {
+    const palettes = [
+      'linear-gradient(135deg, #2E7D32, #4CAF50)',
+      'linear-gradient(135deg, #F57C00, #FFA000)',
+      'linear-gradient(135deg, #7B1FA2, #AB47BC)',
+      'linear-gradient(135deg, #1565C0, #1E88E5)',
+      'linear-gradient(135deg, #00695C, #00897B)',
+      'linear-gradient(135deg, #C62828, #E53935)',
+    ];
+    let hash = 0;
+    for (let i = 0; i < (email || '').length; i++) {
+      hash = (hash * 31 + email.charCodeAt(i)) & 0xffffffff;
+    }
+    return palettes[Math.abs(hash) % palettes.length];
   }
 
   async disconnect(c: Collaborator) {

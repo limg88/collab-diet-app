@@ -52,7 +52,7 @@ import { AuthService } from '../../core/services/auth.service';
     .card {
       width: 100%;
       max-width: 400px;
-      background: white;
+      background: var(--ion-card-background);
       border-radius: 20px;
       padding: 32px 24px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.25);
@@ -60,7 +60,7 @@ import { AuthService } from '../../core/services/auth.service';
     .card h2 {
       font-size: 1.5rem;
       font-weight: 700;
-      color: #1a1a1a;
+      color: var(--ion-color-dark);
       margin: 0 0 24px;
     }
     .input-group {
@@ -70,7 +70,7 @@ import { AuthService } from '../../core/services/auth.service';
       display: block;
       font-size: 0.8rem;
       font-weight: 700;
-      color: #555;
+      color: var(--ion-color-medium);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 6px;
@@ -78,18 +78,18 @@ import { AuthService } from '../../core/services/auth.service';
     .input-wrapper {
       display: flex;
       align-items: center;
-      background: #F5F5F5;
+      background: var(--ion-color-light);
       border-radius: 10px;
       border: 2px solid transparent;
       padding: 0 12px;
       transition: border-color 0.2s;
     }
     .input-wrapper:focus-within {
-      border-color: #2E7D32;
-      background: #fff;
+      border-color: var(--ion-color-primary);
+      background: var(--ion-item-background);
     }
     .input-wrapper ion-icon {
-      color: #aaa;
+      color: var(--ion-color-medium);
       font-size: 18px;
       flex-shrink: 0;
     }
@@ -97,31 +97,31 @@ import { AuthService } from '../../core/services/auth.service';
       --padding-start: 8px;
       --padding-end: 0;
       --background: transparent;
-      --color: #1a1a1a;
+      --color: var(--ion-text-color);
       flex: 1;
     }
     .btn-primary {
-      --background: #2E7D32;
-      --background-activated: #1B5E20;
+      --background: var(--ion-color-primary);
+      --background-activated: var(--ion-color-primary-shade);
       --border-radius: 10px;
-      --box-shadow: 0 4px 12px rgba(46,125,50,0.4);
+      --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb),0.4);
       height: 52px;
       font-weight: 700;
       font-size: 1rem;
       margin: 24px 0 0;
     }
     .link-btn {
-      --color: #2E7D32;
+      --color: var(--ion-color-primary);
       font-size: 0.875rem;
       margin-top: 8px;
     }
     .error-msg {
-      background: rgba(211, 47, 47, 0.08);
+      background: rgba(var(--ion-color-danger-rgb), 0.08);
       border-radius: 8px;
       padding: 10px 14px;
       margin-top: 16px;
       font-size: 0.875rem;
-      color: #D32F2F;
+      color: var(--ion-color-danger);
       font-weight: 500;
     }
   `],

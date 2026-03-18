@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
   IonIcon, IonFab, IonFabButton,
@@ -17,7 +18,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
   selector: 'app-shopping',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
+    CommonModule, FormsModule, RouterLink,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
     IonIcon, IonFab, IonFabButton,
     IonCheckbox, IonInput, IonProgressBar, IonSkeletonText, IonSearchbar
@@ -201,11 +202,11 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       letter-spacing: 0;
     }
     .import-btn {
-      --color: #7B1FA2;
-      --padding-start: 4px;
-      --padding-end: 4px;
-      height: 20px;
-      font-size: 0.65rem;
+      --color: var(--ion-color-tertiary);
+      --padding-start: 6px;
+      --padding-end: 6px;
+      height: 26px;
+      font-size: 0.68rem;
       font-weight: 700;
       flex-shrink: 0;
     }
@@ -214,20 +215,20 @@ import { Unit } from '../../features/ingredients/ingredients.service';
     .stock-wrap {
       display: flex;
       align-items: center;
-      gap: 2px;
+      gap: 3px;
       background: var(--ion-color-light);
       border-radius: 8px;
-      padding: 2px 6px 2px 4px;
+      padding: 4px 8px 4px 6px;
       flex-shrink: 0;
     }
-    .stock-icon { font-size: 11px; color: var(--ion-color-medium); flex-shrink: 0; }
+    .stock-icon { font-size: 12px; color: var(--ion-color-medium); flex-shrink: 0; }
     .stock-input {
-      width: 34px;
+      width: 40px;
       --padding-start: 2px;
       --padding-end: 2px;
       --padding-top: 0;
       --padding-bottom: 0;
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       font-weight: 600;
       --background: transparent;
       text-align: center;
@@ -262,9 +263,10 @@ import { Unit } from '../../features/ingredients/ingredients.service';
             class="vis-btn"
             fill="solid"
             size="small"
-            [color]="hidePurchased ? 'primary' : 'light'"
+            [color]="hidePurchased ? 'primary' : 'medium'"
+            [title]="hidePurchased ? 'Acquistati nascosti — clicca per mostrarli' : 'Mostra solo da acquistare'"
             (click)="hidePurchased = !hidePurchased">
-            <ion-icon [name]="hidePurchased ? 'eye-outline' : 'eye-off-outline'" slot="icon-only"></ion-icon>
+            <ion-icon [name]="hidePurchased ? 'eye-off-outline' : 'eye-outline'" slot="icon-only"></ion-icon>
           </ion-button>
         </div>
       </ion-toolbar>
@@ -317,7 +319,9 @@ import { Unit } from '../../features/ingredients/ingredients.service';
               <span class="item-covered" *ngIf="getQtyToBuy(item) === 0 && !item.isPurchased">✓</span>
               <span class="collab-badge" *ngFor="let c of item.collaboratorBreakdown" [title]="c.email">{{ getEmailInitial(c.email) }}</span>
               <ion-button class="import-btn" fill="clear" size="small" *ngIf="item.collaboratorStockQty > 0"
-                [disabled]="importingStock.has(item.id)" (click)="importCollaboratorStock(item)">+scorta</ion-button>
+                [disabled]="importingStock.has(item.id)"
+                title="Importa scorta collaboratore ({{ item.collaboratorStockQty }} {{ item.unit }})"
+                (click)="importCollaboratorStock(item)">+scorta</ion-button>
               <div class="stock-wrap">
                 <ion-icon name="storefront-outline" class="stock-icon"></ion-icon>
                 <ion-input type="number" class="stock-input" [value]="item.stockQty" (ionChange)="updateStock(item, $event)" placeholder="0" min="0"></ion-input>
@@ -360,6 +364,9 @@ import { Unit } from '../../features/ingredients/ingredients.service';
           <ion-icon name="cart-outline" class="empty-icon"></ion-icon>
           <h3>Lista vuota</h3>
           <p>Pianifica il menù settimanale per generare automaticamente la lista della spesa.</p>
+          <ion-button [routerLink]="'/menu'" style="margin-top:8px;">
+            Vai al menù
+          </ion-button>
         </div>
 
       </ng-container>

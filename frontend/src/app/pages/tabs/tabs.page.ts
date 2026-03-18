@@ -15,13 +15,13 @@ import { calendarOutline, nutrition, cartOutline, peopleOutline } from 'ionicons
           <ion-icon name="calendar-outline"></ion-icon>
           <ion-label>Menù</ion-label>
         </ion-tab-button>
-        <ion-tab-button tab="ingredients" href="/ingredients">
-          <ion-icon name="nutrition"></ion-icon>
-          <ion-label>Ingredienti</ion-label>
-        </ion-tab-button>
         <ion-tab-button tab="shopping" href="/shopping">
           <ion-icon name="cart-outline"></ion-icon>
           <ion-label>Spesa</ion-label>
+        </ion-tab-button>
+        <ion-tab-button tab="ingredients" href="/ingredients">
+          <ion-icon name="nutrition"></ion-icon>
+          <ion-label>Ingredienti</ion-label>
         </ion-tab-button>
         <ion-tab-button tab="collaboration" href="/collaboration">
           <ion-icon name="people-outline"></ion-icon>

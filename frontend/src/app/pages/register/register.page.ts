@@ -22,19 +22,22 @@ import { AuthService } from '../../core/services/auth.service';
     .brand-icon { font-size:56px; margin-bottom:10px; }
     .brand h1 { font-size:2rem; font-weight:800; margin:0; letter-spacing:-0.5px; }
     .brand p { font-size:0.9rem; opacity:0.85; margin:4px 0 0; }
-    .card { width:100%; max-width:400px; background:white; border-radius:20px; padding:32px 24px; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
-    .card h2 { font-size:1.5rem; font-weight:700; color:#1a1a1a; margin:0 0 4px; }
-    .card .subtitle { font-size:0.875rem; color:#888; margin:0 0 24px; }
+    .card { width:100%; max-width:400px; background:var(--ion-card-background); border-radius:20px; padding:32px 24px; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+    .card h2 { font-size:1.5rem; font-weight:700; color:var(--ion-color-dark); margin:0 0 4px; }
+    .card .subtitle { font-size:0.875rem; color:var(--ion-color-medium); margin:0 0 24px; }
     .input-group { margin-bottom:16px; }
-    .input-group label { display:block; font-size:0.8rem; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
-    .input-wrapper { display:flex; align-items:center; background:#F5F5F5; border-radius:10px; border:2px solid transparent; padding:0 12px; transition:border-color 0.2s; }
-    .input-wrapper:focus-within { border-color:#2E7D32; background:#fff; }
-    .input-wrapper ion-icon { color:#aaa; font-size:18px; flex-shrink:0; }
-    .input-wrapper ion-input { --padding-start:8px; --padding-end:0; --background:transparent; --color:#1a1a1a; flex:1; }
-    .btn-primary { --background:#2E7D32; --background-activated:#1B5E20; --border-radius:10px; --box-shadow:0 4px 12px rgba(46,125,50,0.4); height:52px; font-weight:700; font-size:1rem; margin:24px 0 0; }
-    .link-btn { --color:#2E7D32; font-size:0.875rem; margin-top:8px; }
-    .hint { font-size:0.75rem; color:#aaa; margin-top:4px; padding-left:2px; }
-    .error-msg { background:rgba(211,47,47,0.08); border-radius:8px; padding:10px 14px; margin-top:16px; font-size:0.875rem; color:#D32F2F; font-weight:500; }
+    .input-group label { display:block; font-size:0.8rem; font-weight:700; color:var(--ion-color-medium); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+    .input-wrapper { display:flex; align-items:center; background:var(--ion-color-light); border-radius:10px; border:2px solid transparent; padding:0 12px; transition:border-color 0.2s; }
+    .input-wrapper:focus-within { border-color:var(--ion-color-primary); background:var(--ion-item-background); }
+    .input-wrapper ion-icon { color:var(--ion-color-medium); font-size:18px; flex-shrink:0; }
+    .input-wrapper ion-input { --padding-start:8px; --padding-end:0; --background:transparent; --color:var(--ion-text-color); flex:1; }
+    .btn-primary { --background:var(--ion-color-primary); --background-activated:var(--ion-color-primary-shade); --border-radius:10px; --box-shadow:0 4px 12px rgba(var(--ion-color-primary-rgb),0.4); height:52px; font-weight:700; font-size:1rem; margin:24px 0 0; }
+    .link-btn { --color:var(--ion-color-primary); font-size:0.875rem; margin-top:8px; }
+    .hint { font-size:0.75rem; color:var(--ion-color-medium); margin-top:4px; padding-left:2px; }
+    .error-msg { background:rgba(var(--ion-color-danger-rgb),0.08); border-radius:8px; padding:10px 14px; margin-top:16px; font-size:0.875rem; color:var(--ion-color-danger); font-weight:500; }
+    .pwd-rules { padding: 6px 16px 12px; font-size: 0.75rem; display: flex; flex-direction: column; gap: 3px; }
+    .pwd-rule { color: var(--ion-color-medium); }
+    .pwd-rule.ok { color: var(--ion-color-success); }
   `],
   template: `
     <ion-content>
@@ -69,17 +72,17 @@ import { AuthService } from '../../core/services/auth.service';
               </ion-button>
             </div>
           </div>
-          <div style="padding: 6px 16px 12px; font-size: 0.75rem; display: flex; flex-direction: column; gap: 3px;">
-            <span [style.color]="passwordRules.length ? '#2E7D32' : '#999'">
+          <div class="pwd-rules">
+            <span class="pwd-rule" [class.ok]="passwordRules.length">
               {{ passwordRules.length ? '✓' : '○' }} Almeno 8 caratteri
             </span>
-            <span [style.color]="passwordRules.upper ? '#2E7D32' : '#999'">
+            <span class="pwd-rule" [class.ok]="passwordRules.upper">
               {{ passwordRules.upper ? '✓' : '○' }} Una lettera maiuscola
             </span>
-            <span [style.color]="passwordRules.number ? '#2E7D32' : '#999'">
+            <span class="pwd-rule" [class.ok]="passwordRules.number">
               {{ passwordRules.number ? '✓' : '○' }} Un numero
             </span>
-            <span [style.color]="passwordRules.special ? '#2E7D32' : '#999'">
+            <span class="pwd-rule" [class.ok]="passwordRules.special">
               {{ passwordRules.special ? '✓' : '○' }} Un carattere speciale (!#$...)
             </span>
           </div>

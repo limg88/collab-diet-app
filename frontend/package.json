@@ -19,9 +19,10 @@
     "@angular/platform-browser": "^17.3.0",
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.0",
-    "@ionic/angular": "^7.8.0",
-    "@capacitor/core": "^6.0.0",
     "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@ionic/angular": "^7.8.0",
+    "astral-regex": "^2.0.0",
     "ionicons": "^7.4.0",
     "rxjs": "^7.8.1",
     "zone.js": "~0.14.0"
@@ -30,17 +31,18 @@
     "@angular-devkit/build-angular": "^17.3.0",
     "@angular/cli": "^17.3.0",
     "@angular/compiler-cli": "^17.3.0",
-    "@types/node": "^20.0.0",
+    "@capacitor/cli": "^8.2.0",
     "@ionic/angular-toolkit": "^11.0.0",
-    "typescript": "^5.4.0",
+    "@types/jasmine": "^5.1.0",
+    "@types/node": "^20.0.0",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.0.0",
+    "jasmine-core": "^5.1.0",
     "karma": "^6.4.0",
     "karma-chrome-launcher": "^3.2.0",
     "karma-coverage": "^2.2.0",
     "karma-jasmine": "^5.1.0",
     "karma-jasmine-html-reporter": "^2.1.0",
-    "jasmine-core": "^5.1.0",
-    "@types/jasmine": "^5.1.0",
-    "electron": "^30.0.0",
-    "electron-builder": "^24.0.0"
+    "typescript": "^5.4.0"
   }
 }

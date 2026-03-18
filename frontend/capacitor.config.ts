@@ -3,6 +3,6 @@ const config: CapacitorConfig = {
   appId: 'com.collabdiet.app',
   appName: 'CollabDiet',
   webDir: 'www',
-  server: { androidScheme: 'https' }
+  server: { androidScheme: 'http', cleartext: true }
 };
 export default config;

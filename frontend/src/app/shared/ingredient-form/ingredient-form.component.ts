@@ -56,10 +56,18 @@ const ALL_MEAL_TYPES: MealType[] = ['BREAKFAST','MORNING_SNACK','LUNCH','AFTERNO
       padding: 8px 16px 4px;
     }
     .cat-suggestions {
-      padding: 0 12px 8px;
+      padding: 0 12px 4px;
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
+      max-height: 72px;   /* ~2 rows: (30px chip + 6px gap) × 2 */
+      overflow: hidden;
+    }
+    .cat-no-match {
+      padding: 0 16px 8px;
+      font-size: 0.78rem;
+      color: var(--ion-color-medium);
+      font-style: normal;
     }
     .cat-chip {
       --background: var(--ion-border-color);
@@ -68,6 +76,7 @@ const ALL_MEAL_TYPES: MealType[] = ['BREAKFAST','MORNING_SNACK','LUNCH','AFTERNO
       height: 30px;
       cursor: pointer;
       transition: background 0.15s;
+      margin: 0;
     }
     .cat-chip.active {
       --background: var(--ion-color-primary);
@@ -134,24 +143,30 @@ const ALL_MEAL_TYPES: MealType[] = ['BREAKFAST','MORNING_SNACK','LUNCH','AFTERNO
             <ion-label position="stacked">Categoria</ion-label>
             <ion-input
               [(ngModel)]="form.category"
+              (ionInput)="onCategoryInput()"
               placeholder="es. Cereali, Latticini, Verdure"
               clearInput>
             </ion-input>
           </ion-item>
         </ion-list>
 
-        <!-- Category suggestions -->
+        <!-- Category suggestions — filtered by current input -->
         <ng-container *ngIf="existingCategories.length > 0">
-          <p class="cat-section-label">Categorie esistenti — tocca per selezionare</p>
-          <div class="cat-suggestions">
+          <p class="cat-section-label">
+            {{ form.category?.trim() ? 'Corrispondenze' : 'Categorie esistenti' }} — tocca per selezionare
+          </p>
+          <div class="cat-suggestions" *ngIf="filteredCategories.length > 0">
             <ion-chip
               class="cat-chip"
               [class.active]="form.category === cat"
-              *ngFor="let cat of existingCategories"
+              *ngFor="let cat of filteredCategories"
               (click)="selectCategory(cat)">
               {{ cat }}
             </ion-chip>
           </div>
+          <p class="cat-no-match" *ngIf="filteredCategories.length === 0 && form.category?.trim()">
+            Nessuna corrispondenza — verrà creata la categoria "{{ form.category }}"
+          </p>
         </ng-container>
 
         <ion-list lines="inset">
@@ -238,6 +253,16 @@ export class IngredientFormComponent implements OnInit {
         allowedMealTypes: [...(this.ingredient.allowedMealTypes || [])]
       };
     }
+  }
+
+  get filteredCategories(): string[] {
+    const q = (this.form.category || '').toLowerCase().trim();
+    if (!q) return this.existingCategories;
+    return this.existingCategories.filter(c => c.toLowerCase().includes(q));
+  }
+
+  onCategoryInput() {
+    // trigger change detection — getter recomputes automatically
   }
 
   selectCategory(cat: string) {

@@ -194,14 +194,14 @@ import { Unit } from '../../features/ingredients/ingredients.service';
       flex-shrink: 0;
     }
 
-    /* collab user badge — circle with initial, color from email hash */
+    /* collab user badge — matches collaboration page avatar style */
     .collab-badge {
-      width: 18px;
-      height: 18px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       color: white;
-      font-size: 0.58rem;
-      font-weight: 800;
+      font-size: 0.62rem;
+      font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -363,7 +363,7 @@ import { Unit } from '../../features/ingredients/ingredients.service';
                 </ng-template>
                 <span class="collab-badge" *ngFor="let c of item.collaboratorBreakdown"
                   [title]="c.email"
-                  [style.background]="getCollabBadgeColor(c.email)">{{ getEmailInitial(c.email) }}</span>
+                  [style.background]="getCollabBadgeColor(c.email)">{{ getEmailInitials(c.email) }}</span>
                 <ion-button fill="clear" size="small" class="stock-toggle-btn"
                   *ngIf="item.stockQty === 0 && item.collaboratorStockQty === 0"
                   [color]="expandedStock.has(item.id) ? 'primary' : 'medium'"
@@ -515,12 +515,25 @@ export class ShoppingPage implements OnInit {
     return !!(item.collaboratorBreakdown?.length);
   }
 
-  getEmailInitial(email: string): string {
-    return (email?.split('@')[0]?.[0] ?? '?').toUpperCase();
+  getEmailInitials(email: string): string {
+    if (!email) return '?';
+    const local = email.split('@')[0];
+    const parts = local.split(/[._\-]/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return local.substring(0, 2).toUpperCase();
   }
 
   getCollabBadgeColor(email: string): string {
-    const palette = ['#2E7D32','#F57C00','#7B1FA2','#1565C0','#00695C','#C62828','#AD1457','#E65100'];
+    const palette = [
+      'linear-gradient(135deg,#2E7D32,#4CAF50)',
+      'linear-gradient(135deg,#F57C00,#FFA000)',
+      'linear-gradient(135deg,#7B1FA2,#AB47BC)',
+      'linear-gradient(135deg,#1565C0,#1E88E5)',
+      'linear-gradient(135deg,#00695C,#00897B)',
+      'linear-gradient(135deg,#C62828,#E53935)',
+      'linear-gradient(135deg,#AD1457,#E91E63)',
+      'linear-gradient(135deg,#E65100,#FF9800)',
+    ];
     let hash = 0;
     for (let i = 0; i < (email || '').length; i++) {
       hash = (hash * 31 + email.charCodeAt(i)) & 0xffffffff;

@@ -472,8 +472,8 @@ import { AuthService } from '../../core/services/auth.service';
                   </tr>
                 </tbody>
               </table>
-              <div *ngIf="showAllMeasHistory" style="margin-top:8px;">
-                <table class="mh-table">
+              <div *ngIf="showAllMeasHistory" style="margin-top:8px; overflow-x:auto; -webkit-overflow-scrolling:touch;">
+                <table class="mh-table" style="min-width:420px;">
                   <thead>
                     <tr><th>Data</th><th>Spalle</th><th>Br. L</th><th>Br. R</th><th>Coscia L</th><th>Coscia R</th><th>Polp. L</th><th>Polp. R</th></tr>
                   </thead>
